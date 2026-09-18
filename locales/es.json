@@ -1,0 +1,17 @@
+{
+    "app_title": "OrientSol 3.0 Web",
+    "data_input": "1. Entrada de Parámetros",
+    "latitude": "Latitud (Grados decimales):",
+    "longitude": "Longitud (Grados decimales):",
+    "api_fetch": "Importar datos desde API (PVGIS/NASA)",
+    "api_connect": "Conectar con PVGIS",
+    "csv_upload": "O cargar archivo local (.CSV / Excel)",
+    "calculate": "Ejecutar Simulación Matemática",
+    "results": "2. Resultados de la Simulación",
+    "month": "Mes",
+    "opt_annual": "Óptima Anual",
+    "chart_placeholder": "Haga clic en calcular para generar la gráfica y tabla de resultados.",
+    "error_lat_lon": "Por favor, introduzca valores numéricos válidos para Latitud y Longitud.",
+    "error_no_data": "No hay datos de radiación. Por favor, conecte con la API o suba un archivo CSV local primero.",
+    "success_api": "Datos meteorológicos descargados correctamente de la API."
+}
