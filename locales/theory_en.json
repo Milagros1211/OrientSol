@@ -1,0 +1,30 @@
+{
+  "moduleTitle": "Didactic Module: Solar Fundamentals",
+  "sections": [
+    {
+      "id": "teoria_1",
+      "title": "1. Solar Radiation",
+      "content": "Solar radiation is the set of electromagnetic radiations emitted by the Sun. For its calculation, the solar constant and the variations caused by the declination and latitude of the study location are considered."
+    },
+    {
+      "id": "teoria_2",
+      "title": "2. Radiation Components",
+      "content": "The global radiation reaching a surface is divided into three components: Direct (coming from the solar disk), Diffuse (scattered by the atmosphere), and Albedo (reflected by the surroundings, conditioned by the reflection coefficient)."
+    },
+    {
+      "id": "teoria_5",
+      "title": "3. Radiation Estimation",
+      "content": "The application uses empirical and analytical models, such as the Osterwald method, to estimate irradiation on inclined surfaces based on data captured on the horizontal plane."
+    },
+    {
+      "id": "teoria_6",
+      "title": "4. Computational Calculation Scheme",
+      "content": "The kinematic engine first solves the hour angles and the azimuth, to later apply the geometric transposition matrices according to the type of tracker (fixed, polar, horizontal, azimuthal, or dual-axis)."
+    },
+    {
+      "id": "teoria_7",
+      "title": "5. Search for Optimal Situations",
+      "content": "Through iterative processes in 1º steps, the algorithm evaluates the maximum capture at angles between 0º and 90º, thus defining the optimal seasonal and annual angle for the photovoltaic panels."
+    }
+  ]
+}

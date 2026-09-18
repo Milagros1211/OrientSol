@@ -1,132 +1,74 @@
 /**
- * MOTOR DE SEGUIMIENTO SOLAR (TRACKING) - OrientSol 3.0 Web
- * Sustituye a: Bd_2Ejes.m, Rh_EjePolar.m, Dd_EjeAzimutal.m y homólogos.
+ * ==========================================
+ * Archivo: src/core/tracking.js
+ * Propósito: Dinámica y cinemática de seguidores solares (Sustituye Bh_...m, Dh_...m, Rh_...m, Gd_...m)
+ * ==========================================
  */
 
-import { 
-    calculateDeclination, 
-    calculateSunsetHourAngle, 
-    calculateExtraterrestrialRadiation, 
-    calculateDiffuseFraction 
-} from './radiation.js';
+export const Tracking = {
+    /**
+     * Seguimiento a un eje polar (o ecuatorial).
+     * El eje de rotación es paralelo al eje de la Tierra (inclinación = latitud, azimut = 0º).
+     */
+    simulatePolarAxis(hourAnglesMatrix, declinations, latitudeRad) {
+        // En un seguidor polar, el ángulo de incidencia equivale a la declinación solar.
+        return hourAnglesMatrix.map((dailyAngles, monthIdx) => {
+            const dec = declinations[monthIdx];
+            return dailyAngles.map(w => {
+                // Factor geométrico cos(theta) = cos(delta)
+                return Math.cos(dec);
+            });
+        });
+    },
 
-const ISC = 1.367; // Constante solar en kW/m2
-const deg2rad = (degrees) => degrees * (Math.PI / 180);
-const rad2deg = (radians) => radians * (180 / Math.PI);
+    /**
+     * Seguimiento a un eje horizontal (Norte-Sur).
+     * El eje de rotación es paralelo al suelo. Sustituye la lógica de Bh_EjeHorizontal.m.
+     */
+    simulateHorizontalAxis(hourAnglesMatrix, solarAltitudeMatrix, solarAzimuthMatrix) {
+        return hourAnglesMatrix.map((dailyAngles, monthIdx) => {
+            return dailyAngles.map((w, hourIdx) => {
+                const alpha = solarAltitudeMatrix[monthIdx][hourIdx];
+                const psi = solarAzimuthMatrix[monthIdx][hourIdx];
+                
+                // Cálculo del ángulo óptimo de giro (beta_tracking)
+                // Fórmula: beta = arctan(sin(psi) / tan(alpha))
+                const betaTracking = Math.atan(Math.sin(psi) / Math.tan(alpha));
+                
+                // Retorna el coseno del ángulo de incidencia
+                return Math.cos(betaTracking) * Math.cos(alpha) * Math.cos(psi) + 
+                       Math.sin(betaTracking) * Math.sin(alpha);
+            });
+        });
+    },
 
-/**
- * FUNCIÓN UNIFICADA DE SEGUIMIENTO SOLAR
- * @param {number} latDeg - Latitud en grados
- * @param {number[]} gdmHorizontal - Array de 12 valores de radiación global horizontal mensual
- * @param {string} trackingMode - 'two-axis', 'polar', 'azimuthal', 'horizontal'
- * @param {number} albedo - Coeficiente de reflectividad (Por defecto 0.2)
- * @param {number} fixedTilt - Inclinación fija para el eje azimutal (si es null, usa la latitud)
- */
-export function calculateTrackingRadiation(latDeg, gdmHorizontal, trackingMode, albedo = 0.2, fixedTilt = null) {
-    const lat = deg2rad(latDeg);
-    const n_days = [17, 47, 75, 105, 135, 162, 198, 228, 258, 288, 318, 344];
-    
-    let results = [];
-    
-    for (let month = 0; month < 12; month++) {
-        const Hh = gdmHorizontal[month]; 
-        const n = n_days[month];
-        
-        const delta = calculateDeclination(n);
-        const ws = calculateSunsetHourAngle(lat, delta);
-        const H0 = calculateExtraterrestrialRadiation(lat, n, delta, ws);
-        
-        const Kt = Hh / H0; 
-        const Kd = calculateDiffuseFraction(Kt, ws); 
-        
-        const Dh = Hh * Kd; 
-        const Bh = Hh - Dh; 
-        
-        // Integración horaria (Pasos de 1 grado = 4 minutos)
-        const d_omega = deg2rad(1); 
-        const dt_hours = 1 / 15; 
-        
-        let G_track = 0, B_track = 0, D_track = 0, R_track = 0;
-        
-        const a = 0.409 + 0.5016 * Math.sin(ws - deg2rad(60));
-        const b = 0.6609 - 0.4767 * Math.sin(ws - deg2rad(60));
-        const denom = Math.sin(ws) - ws * Math.cos(ws);
-        
-        for (let w = -ws + d_omega/2; w < ws; w += d_omega) {
-            // Distribución horaria
-            const num = Math.cos(w) - Math.cos(ws);
-            const rd = (Math.PI / 24) * (num / denom);
-            const rg = (Math.PI / 24) * (a + b * Math.cos(w)) * (num / denom);
-            
-            const d_Dh = Dh * rd * dt_hours;
-            const d_Gh = Hh * rg * dt_hours;
-            const d_Bh = Math.max(0, d_Gh - d_Dh);
-            
-            // 1. Calcular posición astronómica del Sol (Zenit y Azimut solar)
-            const cos_theta_z = Math.sin(lat)*Math.sin(delta) + Math.cos(lat)*Math.cos(delta)*Math.cos(w);
-            const theta_z = Math.acos(cos_theta_z);
-            
-            // Azimut solar (gamma_s)
-            let cos_gamma_s = (Math.cos(theta_z)*Math.sin(lat) - Math.sin(delta)) / (Math.sin(theta_z)*Math.cos(lat));
-            cos_gamma_s = Math.max(-1, Math.min(1, cos_gamma_s)); // Filtro de seguridad
-            const gamma_s = (w > 0) ? Math.acos(cos_gamma_s) : -Math.acos(cos_gamma_s);
+    /**
+     * Seguimiento a un eje azimutal (Vertical).
+     * Mantiene una inclinación constante (usualmente la colatitud) y gira siguiendo el azimut.
+     */
+    simulateAzimuthalAxis(solarAltitudeMatrix, latitudeRad) {
+        const betaAzimuthal = latitudeRad; // Inclinación fija igual a la latitud
+        return solarAltitudeMatrix.map(dailyAltitudes => {
+            return dailyAltitudes.map(alpha => {
+                // Al seguir perfectamente el azimut, cos(theta) = cos(abs(alpha - beta))
+                return Math.cos(Math.abs(alpha - betaAzimuthal));
+            });
+        });
+    },
 
-            // 2. Cinemática del Seguidor (Panel tilt 'beta' e incidencia 'cos_theta')
-            let beta = 0;
-            let cos_theta = 0;
-
-            switch (trackingMode) {
-                case 'two-axis':
-                    // Dos ejes: El panel mira directamente al sol.
-                    beta = theta_z;
-                    cos_theta = 1.0; 
-                    break;
-                    
-                case 'azimuthal':
-                    // Eje vertical: Inclinación fija, azimut sigue al sol.
-                    beta = fixedTilt !== null ? deg2rad(fixedTilt) : Math.abs(lat);
-                    cos_theta = Math.cos(theta_z)*Math.cos(beta) + Math.sin(theta_z)*Math.sin(beta);
-                    break;
-                    
-                case 'polar':
-                    // Eje polar: Inclinado a la latitud, sigue el ángulo horario.
-                    beta = Math.acos(Math.cos(lat)*Math.cos(delta)*Math.cos(w) + Math.sin(lat)*Math.sin(delta));
-                    cos_theta = Math.cos(delta);
-                    break;
-
-                case 'horizontal':
-                    // Eje horizontal N-S: Seguimiento E-O.
-                    beta = Math.atan(Math.tan(theta_z) * Math.abs(Math.cos(gamma_s)));
-                    cos_theta = Math.sqrt(1 - Math.pow(Math.sin(theta_z)*Math.sin(gamma_s), 2));
-                    break;
-            }
-
-            // 3. Control de indeterminaciones (sol bajo el horizonte o panel detrás del sol)
-            let Rb = 0;
-            if (cos_theta_z > 0.01 && cos_theta > 0) {
-                Rb = cos_theta / cos_theta_z;
-            }
-            
-            // 4. Transposición Isotrópica
-            const d_B_track = d_Bh * Rb;
-            const d_D_track = d_Dh * ((1 + Math.cos(beta)) / 2);
-            const d_R_track = d_Gh * albedo * ((1 - Math.cos(beta)) / 2);
-            
-            B_track += d_B_track;
-            D_track += d_D_track;
-            R_track += d_R_track;
-            G_track += (d_B_track + d_D_track + d_R_track);
-        }
-        
-        results.push({
-            month: month + 1,
-            Hh_global: Hh,         
-            G_tilted: G_track,    
-            B_tilted: B_track,    
-            D_tilted: D_track,    
-            R_tilted: R_track     
+    /**
+     * Seguimiento a dos ejes.
+     * La superficie se mantiene permanentemente perpendicular a la radiación directa.
+     * Absorbe Calulo_Beta_2Ejes.m y derivados.
+     */
+    simulateDualAxis(solarAltitudeMatrix) {
+        return solarAltitudeMatrix.map(dailyAltitudes => {
+            return dailyAltitudes.map(alpha => {
+                // Perpendicularidad perfecta: beta = 90º - alpha
+                const betaDual = (Math.PI / 2) - alpha;
+                // El coseno del ángulo de incidencia es máximo (1) para la componente directa
+                return { betaDynamic: betaDual, incidenceFactor: 1.0 };
+            });
         });
     }
-    
-    return results;
-}
+};

@@ -1,124 +1,66 @@
-// =========================================================================
-// CONTROLADOR PRINCIPAL - OrientSol 3.0 Web
-// Coordina la Interfaz (UI), los Datos Híbridos (API/CSV) y el Motor Matemático
-// =========================================================================
-
+// ==========================================
+// Archivo: src/app.js
+// Propósito: Controlador principal. Conecta eventos de la UI con el Motor Matemático.
+// ==========================================
 import { State } from './state.js';
-// IMPORTANTE: Asegúrate de importar la nueva función al inicio de app.js
-import { fetchWeatherDataAPI, handleLocalCSVUpload, loadDefaultDatabase } from './data.js';
-import { optimizeAnnualTilt } from './core/optimizacion.js';
-import { renderResultsTable } from './ui.js';
-import { loadLanguage, updateUIWithLanguage } from '../locales/i18n.js';
+import { syncInputsToState, renderResultsTable, showAlert } from './ui.js';
+// Módulos importados conceptualmente para la arquitectura:
+import { loadDefaultDatabase, fetchWeatherDataAPI, handleCSVUpload } from './data.js';
+import { runSimulation } from './core/simulation.js';
+import { updateCharts } from './charts.js';
+import { exportToCSV, generatePDF } from './export.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
     
-    // --- 1. SISTEMA BILINGÜE INICIAL ---
-    let currentLangDict = await loadLanguage('es');
-    updateUIWithLanguage(currentLangDict);
+    // 1. Inicialización: Carga silenciosa de la base de datos offline (datos_mundo.csv)
+    await loadDefaultDatabase();
 
-    document.getElementById('langSelector').addEventListener('change', async (e) => {
-        currentLangDict = await loadLanguage(e.target.value);
-        updateUIWithLanguage(currentLangDict);
+    // 2. Evento: Conexión Híbrida (API Online)
+    document.getElementById('btnFetchAPI').addEventListener('click', async () => {
+        syncInputsToState();
+        if (isNaN(State.location.latitude) || isNaN(State.location.longitude)) {
+            return showAlert("Por favor, introduzca valores numéricos válidos para Latitud y Longitud.", true);
+        }
+        await fetchWeatherDataAPI(State.location.latitude, State.location.longitude);
+        showAlert("Datos climatológicos obtenidos exitosamente desde PVGIS.");
     });
 
-    // === CARGA AUTOMÁTICA DE LA BASE DE DATOS PREDETERMINADA ===
-    const citySelector = document.getElementById('citySelector');
-    if (citySelector) {
-        // 1. Descargamos las ciudades del CSV silenciosamente
-        const defaultCities = await loadDefaultDatabase();
+    // 3. Evento: Archivo CSV Manual (Modo Offline Backup)
+    document.getElementById('csvUpload').addEventListener('change', (event) => {
+        handleCSVUpload(event);
+    });
+
+    // 4. Evento Maestro: Ejecución del Motor Matemático
+    document.getElementById('btnCalculate').addEventListener('click', () => {
+        syncInputsToState();
         
-        // 2. Llenamos el menú desplegable de la interfaz
-        defaultCities.forEach((city, index) => {
-            const option = document.createElement('option');
-            option.value = index;
-            option.textContent = city.name;
-            citySelector.appendChild(option);
-        });
-
-        // 3. Cuando el usuario elija una ciudad ("Ej: Lima (Perú)")
-        citySelector.addEventListener('change', (e) => {
-            const selectedIndex = e.target.value;
-            if (selectedIndex !== "") {
-                const city = defaultCities[selectedIndex];
-                
-                // Auto-rellenar las cajas de texto
-                document.getElementById('latInput').value = city.lat;
-                document.getElementById('lonInput').value = city.lon;
-                
-                // Inyectar datos en la memoria listos para simular
-                State.latitude = city.lat;
-                State.longitude = city.lon;
-                State.monthlyGlobalRadiation = city.radiation;
-                State.temperatureData = city.temperature;
-                
-                console.log(`✅ Base de datos precargada: ${city.name} lista para calcular.`);
-            }
-        });
-    }
-
-    // --- 2. CARGA DUAL: MODO ONLINE (API CLIMÁTICA) ---
-    document.getElementById('btnFetchAPI').addEventListener('click', async () => {
-        const lat = parseFloat(document.getElementById('latInput').value);
-        const lon = parseFloat(document.getElementById('lonInput').value); // LECTURA DE LONGITUD
-
-        if (isNaN(lat) || isNaN(lon)) {
-            alert(currentLangDict.error_lat_lon);
-            return;
+        // Validación de seguridad (antes provocaba cuelgues en MATLAB)
+        if (State.climateData.monthlyGlobalRadiation.reduce((a,b) => a+b, 0) === 0) {
+            return showAlert("No hay datos de radiación en memoria. Conecte con la API o suba un archivo CSV primero.", true);
         }
 
         try {
-            // Llamamos a la API usando Latitud y Longitud
-            const apiData = await fetchWeatherDataAPI(lat, lon);
+            // Inyección al orquestador matemático
+            runSimulation();
             
-            // Guardamos los datos meteorológicos en el Gestor de Estado (Sustituye variables globales)
-            State.latitude = lat;
-            State.longitude = lon;
-            State.monthlyGlobalRadiation = apiData.radiation; 
-            State.temperatureData = apiData.temperature;
+            // Actualización del DOM y Gráficos (Sin abrir ventanas secundarias)
+            renderResultsTable();
+            updateCharts();
             
-            alert(currentLangDict.success_api);
         } catch (error) {
-            alert("Error de conexión. Puede usar el modo Offline subiendo un CSV.");
+            console.error(error);
+            showAlert("Fallo en la resolución matricial.", true);
         }
     });
 
-    // --- 3. CARGA DUAL: MODO OFFLINE (ARCHIVO LOCAL CSV) ---
-    document.getElementById('csvUpload').addEventListener('change', (event) => {
-        const file = event.target.files[0];
-        if (!file) return;
-
-        handleLocalCSVUpload(file, (extractedData) => {
-            // Inyectamos los datos del Excel/CSV directamente al Estado
-            State.monthlyGlobalRadiation = extractedData.radiation;
-            State.temperatureData = extractedData.temperature;
-            alert("Datos locales cargados correctamente. Ya puede ejecutar la simulación.");
-        });
+    // 5. Evento: Cambio de componente a visualizar (Interactividad instantánea)
+    document.getElementById('componentSelector').addEventListener('change', () => {
+        syncInputsToState();
+        renderResultsTable();
+        updateCharts();
     });
 
-    // --- 4. MOTOR MATEMÁTICO Y VISUALIZACIÓN ---
-    document.getElementById('btnCalculate').addEventListener('click', () => {
-        const lat = parseFloat(document.getElementById('latInput').value);
-        
-        if (isNaN(lat)) {
-            alert(currentLangDict.error_lat_lon);
-            return;
-        }
-
-        // Verificamos que existan datos cargados (por API o por CSV) antes de calcular
-        if (!State.monthlyGlobalRadiation || State.monthlyGlobalRadiation.length !== 12) {
-            alert(currentLangDict.error_no_data);
-            return;
-        }
-
-        // Actualizamos latitud en el estado por si el usuario la modificó a mano
-        State.latitude = lat;
-
-        // EJECUCIÓN DEL CÁLCULO: Se envía Latitud y Datos de Radiación (Gdm0)
-        // Esto sustituye la llamada rígida a Calculos_optimo.m
-        const optimizationResults = optimizeAnnualTilt(State.latitude, State.monthlyGlobalRadiation);
-        
-        // PINTAR RESULTADOS: Actualizamos la tabla dinámicamente sin recargar la web
-        renderResultsTable(optimizationResults);
-    });
-
+    // 6. Eventos de Exportación
+    document.getElementById('btnExportCSV').addEventListener('click', exportToCSV);
+    document.getElementById('btnExportPDF').addEventListener('click', generatePDF);
 });

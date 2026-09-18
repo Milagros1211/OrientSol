@@ -1,54 +1,58 @@
-/**
- * CONTROLADOR DE LA INTERFAZ DE USUARIO (VISTA)
- * Sustituye a: Tabla_OptAnual.m y las rutinas de renderizado estático
- */
+// ==========================================
+// Archivo: src/ui.js
+// Propósito: Interacción con el DOM y actualización de la vista
+// ==========================================
+import { State } from './state.js';
 
-// Nombres de los meses (se podrían vincular al archivo de idiomas locales/es.json)
-const monthNames = [
-    "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", 
-    "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
-];
+// Captura de elementos del DOM
+const elements = {
+    latInput: document.getElementById('latInput'),
+    lonInput: document.getElementById('lonInput'),
+    albedoInput: document.getElementById('albedoInput'),
+    toncInput: document.getElementById('toncInput'),
+    studySelector: document.getElementById('studyModeSelector'),
+    componentSelector: document.getElementById('componentSelector'),
+    resultsTableBody: document.getElementById('resultsTableBody')
+};
 
-/**
- * Pinta los resultados numéricos en la tabla HTML
- * @param {Object} optimizationResult - El objeto devuelto por optimizeAnnualTilt
- */
-export function renderResultsTable(optimizationResult) {
-    const tbody = document.getElementById('resultsTableBody');
-    tbody.innerHTML = ''; // Limpiamos la tabla anterior
+// Lee los inputs del usuario y los guarda en el Estado
+export function syncInputsToState() {
+    State.location.latitude = parseFloat(elements.latInput.value);
+    State.location.longitude = parseFloat(elements.lonInput.value);
+    State.parameters.albedo = parseFloat(elements.albedoInput.value);
+    State.parameters.tonc = parseFloat(elements.toncInput.value);
+    State.parameters.studyMode = parseInt(elements.studySelector.value);
+    State.ui.activeComponent = elements.componentSelector.value;
+}
 
-    let sumHh = 0;
-    let sumGtilted = 0;
+// Renderiza dinámicamente la tabla de resultados (Sustituye la rigidez de GUIDE)
+export function renderResultsTable() {
+    const { ui, results, climateData } = State;
+    const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+    
+    elements.resultsTableBody.innerHTML = ''; // Limpiar tabla
 
-    // Iteramos sobre los 12 meses
-    optimizationResult.monthlyData.forEach((data, index) => {
-        sumHh += data.Hh_global;
-        sumGtilted += data.G_tilted;
+    // Identificar qué datos pintar según el componente activo (global, directa...)
+    let baseData = results.base[ui.activeComponent];
+    let studyData = results.optimalAnnual[ui.activeComponent]; // Ejemplo estático
+    let gainsData = results.optimalAnnual.gains[ui.activeComponent];
 
-        const tr = document.createElement('tr');
-        tr.className = "hover:bg-gray-50 transition-colors";
-        
-        tr.innerHTML = `
-            <td class="p-2 border font-medium">${monthNames[index]}</td>
-            <td class="p-2 border text-gray-600">${data.Hh_global.toFixed(2)}</td>
-            <td class="p-2 border font-bold text-blue-600">${data.G_tilted.toFixed(2)}</td>
+    // Generar las 12 filas mensuales iterativamente
+    let html = '';
+    for (let i = 0; i < 12; i++) {
+        html += `
+            <tr class="hover:bg-blue-50 text-center">
+                <td class="p-2 border border-gray-300 font-bold">${months[i]}</td>
+                <td class="p-2 border border-gray-300">${baseData ? baseData[i].toFixed(2) : '-'}</td>
+                <td class="p-2 border border-gray-300 text-blue-700 font-semibold">${studyData ? studyData[i].toFixed(2) : '-'}</td>
+                <td class="p-2 border border-gray-300 text-green-600">${gainsData ? gainsData[i].toFixed(2) : '-'}</td>
+            </tr>
         `;
-        tbody.appendChild(tr);
-    });
-
-    // Añadir fila de promedios / totales
-    const trTotal = document.createElement('tr');
-    trTotal.className = "bg-blue-100 font-bold";
-    trTotal.innerHTML = `
-        <td class="p-2 border">MEDIA/TOTAL</td>
-        <td class="p-2 border">${(sumHh / 12).toFixed(2)}</td>
-        <td class="p-2 border text-blue-800">${(sumGtilted / 12).toFixed(2)}</td>
-    `;
-    tbody.appendChild(trTotal);
-
-    // Actualizar el título de la tabla con el ángulo óptimo encontrado
-    const tableHeader = document.querySelector('th[data-i18n="opt_annual"]');
-    if(tableHeader) {
-        tableHeader.innerText = `Óptima Anual (${optimizationResult.optimalAngle}º)`;
     }
+    elements.resultsTableBody.innerHTML = html;
+}
+
+export function showAlert(message, isError = false) {
+    // Alerta web moderna (Sustituye a los errordlg de MATLAB)
+    alert(`${isError ? '❌ ERROR:' : '✅ INFO:'} ${message}`);
 }

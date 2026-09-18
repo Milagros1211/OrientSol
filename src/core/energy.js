@@ -1,64 +1,50 @@
 /**
- * MOTOR ENERGÉTICO (MODELO DE OSTERWALD) - OrientSol 3.0 Web
- * Sustituye a: Energia.m y Energia_Osterwald.m
+ * ==========================================
+ * Archivo: src/core/energy.js
+ * Propósito: Transición a potencia real mediante el Modelo Térmico de Osterwald (Sustituye Energia_Osterwald.m)
+ * ==========================================
  */
 
-/**
- * Calcula la energía eléctrica mensual y anual generada por el sistema.
- * 
- * @param {Array} radiationResults - Array de objetos con la radiación (G_tilted) de cada mes (obtenido de radiation.js o tracking.js)
- * @param {Array} ambientTemperatures - Array de 12 valores con la temperatura media mensual (ºC)
- * @param {Object} systemParams - Parámetros técnicos del panel
- * @returns {Object} Energía generada mensualmente y el total anual
- */
-export function calculateOsterwaldEnergy(radiationResults, ambientTemperatures, systemParams = {}) {
-    // Valores por defecto para Silicio Monocristalino si el usuario no los especifica
-    const P_stc = systemParams.P_stc || 1000;         // Potencia pico instalada (W)
-    const gamma = systemParams.gamma || -0.0035;      // Coeficiente de temperatura (1/ºC)
-    const tonc = systemParams.tonc || 47;             // Temperatura de Operación Nominal de la Célula (ºC)
-    
-    // Condiciones Estándar de Medida (STC)
-    const G_stc = 1000; // W/m2
-    const T_stc = 25;   // ºC
+export const Energy = {
+    /**
+     * Aplica el modelo de Osterwald para determinar la energía eléctrica producida (kWh).
+     * Considera la temperatura ambiente y la Temperatura de Operación Nominal de la Célula (TONC).
+     * 
+     * @param {Array} radiationVector - Radiación global diaria mensual (kWh/m2/día).
+     * @param {Array} temperatureVector - Temperaturas medias mensuales (ºC).
+     * @param {Number} installedPowerKw - Potencia pico instalada (kWp).
+     * @param {Number} tonc - TONC del panel (por defecto ~47ºC).
+     * @param {Number} gamma - Coeficiente de temperatura (ej. -0.0035 ºC^-1).
+     */
+    applyOsterwaldModel(radiationVector, temperatureVector, installedPowerKw = 1, tonc = 47, gamma = -0.0035) {
+        const daysInMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+        let monthlyEnergy = [];
+        let annualEnergy = 0;
 
-    const daysInMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
-    
-    let energyResults = [];
-    let totalAnnualEnergy = 0;
+        for (let i = 0; i < 12; i++) {
+            const G_diaria = radiationVector[i]; // Irradiación (kWh/m2/día)
+            const T_amb = temperatureVector[i];
 
-    for (let i = 0; i < 12; i++) {
-        const T_amb = ambientTemperatures[i];
-        
-        // La irradiancia media G (W/m2) se estima a partir de la radiación diaria (kWh/m2/día)
-        // Para simplificar el modelo mensual, asumimos unas 10 horas de sol pico equivalentes
-        // En un modelo horario estricto, esto se calcularía en el bucle de integración.
-        // Aquí adaptamos la fórmula de Osterwald promediada mensualmente:
-        const G_mean = (radiationResults[i].G_tilted * 1000) / 10; 
-        
-        // 1. Calcular la temperatura de la célula (Tc)
-        const T_c = T_amb + ((tonc - 20) / 800) * G_mean;
-        
-        // 2. Aplicar el Modelo de Osterwald para obtener la Potencia Máxima (Pm)
-        // P_m = P_stc * (G / G_stc) * [1 + gamma * (T_c - T_stc)]
-        const P_m = P_stc * (G_mean / G_stc) * (1 + gamma * (T_c - T_stc));
-        
-        // 3. Convertir la Potencia a Energía Diaria y luego Mensual
-        // E = P_m * (horas_equivalentes) * dias_del_mes / 1000 (para pasar a kWh)
-        const dailyEnergy_kWh = (P_m * 10) / 1000; 
-        const monthlyEnergy_kWh = dailyEnergy_kWh * daysInMonth[i];
-        
-        totalAnnualEnergy += monthlyEnergy_kWh;
+            // 1. Irradiancia media horaria asumiendo sol plano de 24h (Metodología de OrientSol)
+            // G (W/m2) = G_diaria (kWh/m2/día) * 1000 / 24
+            const G_wm2 = (G_diaria * 1000) / 24;
 
-        energyResults.push({
-            month: i + 1,
-            T_cell: T_c,
-            P_max: P_m,
-            monthlyEnergy: monthlyEnergy_kWh
-        });
+            // 2. Temperatura de la Célula (Tc)
+            // Fórmula: Tc = T_amb + [(TONC - 20) / 800] * G_wm2
+            const T_celula = T_amb + (((tonc - 20) / 800) * G_wm2);
+
+            // 3. Potencia media ajustada por pérdidas térmicas (Modelo Osterwald)
+            // P = P_pico * (G / 1000) * [1 + gamma * (Tc - 25)]
+            const P_media = (installedPowerKw * 1000) * (G_wm2 / 1000) * (1 + (gamma * (T_celula - 25)));
+
+            // 4. Energía generada en el mes (kWh)
+            // E_mes = P_media(W) * 24h * dias_del_mes / 1000
+            const E_mes = (P_media * 24 * daysInMonth[i]) / 1000;
+            
+            monthlyEnergy.push(E_mes);
+            annualEnergy += E_mes;
+        }
+
+        return { monthlyEnergy, annualEnergy };
     }
-
-    return {
-        monthlyData: energyResults,
-        totalAnnualEnergy: totalAnnualEnergy
-    };
-}
+};
