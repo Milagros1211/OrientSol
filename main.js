@@ -2,37 +2,37 @@ const { app, BrowserWindow } = require('electron');
 const path = require('path');
 
 function createWindow () {
-  // Crea la ventana del navegador de escritorio.
+  // Configuración de la ventana nativa de Windows
   const mainWindow = new BrowserWindow({
-    width: 1200,
+    width: 1280,
     height: 800,
-    icon: path.join(__dirname, 'assets/img/icon.png'),
+    minWidth: 1024,
+    minHeight: 768,
+    icon: path.join(__dirname, 'assets/img/ujaen.png'),
     webPreferences: {
-      nodeIntegration: true,
-      contextIsolation: false
+      // Medidas de seguridad modernas
+      nodeIntegration: false,
+      contextIsolation: true
     }
   });
 
-  // Carga el index.html de la aplicación (100% offline)
-  mainWindow.loadFile('index.html');
-  
-  // Ocultar el menú superior por defecto para dar aspecto de App nativa
+  // Elimina la barra de menú superior (Archivo, Editar, Ver...) para que parezca un software nativo
   mainWindow.setMenuBarVisibility(false);
+
+  // Carga el HTML principal de tu aplicación
+  mainWindow.loadFile('index.html');
 }
 
-// Cuando Electron esté listo, inicializa la ventana
+// Cuando Electron esté listo, abre la ventana
 app.whenReady().then(() => {
   createWindow();
 
   app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) {
-      createWindow();
-    }
+    if (BrowserWindow.getAllWindows().length === 0) createWindow();
   });
 });
 
+// Cierra el proceso cuando el usuario cierra todas las ventanas
 app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
-    app.quit();
-  }
+  if (process.platform !== 'darwin') app.quit();
 });

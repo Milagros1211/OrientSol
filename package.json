@@ -1,0 +1,24 @@
+{
+  "name": "orientsol",
+  "version": "3.0.0",
+  "description": "Estudio y planificación energética fotovoltaica",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder --windows"
+  },
+  "author": "Universidad de Jaén",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^28.0.0",
+    "electron-builder": "^24.9.1"
+  },
+  "build": {
+    "appId": "es.ujaen.orientsol",
+    "productName": "OrientSol 3.0",
+    "win": {
+      "target": "nsis",
+      "icon": "assets/img/logo_uja.ico"
+    }
+  }
+}

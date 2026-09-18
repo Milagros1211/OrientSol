@@ -3,102 +3,153 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OrientSol 3.0 - Laboratorio Virtual</title>
-    <!-- Estilos locales -->
-    <link rel="stylesheet" href="assets/css/style.css">
-    <!-- Tailwind CSS (Opcional, para diseño responsivo rápido) -->
+    <title>OrientSol 3.0 - Laboratorio Virtual Fotovoltaico</title>
+    <!-- Tailwind CSS para diseño rápido y responsivo -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Tu hoja de estilos personalizada -->
+    <link rel="stylesheet" href="./assets/css/style.css">
+    <!-- Chart.js para los gráficos dinámicos -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-<body class="bg-gray-100 font-sans text-gray-800">
+<body class="bg-gray-100 text-gray-800 font-sans">
 
-    <!-- Navegación Superior -->
-    <nav class="bg-blue-900 text-white p-4 flex justify-between items-center shadow-md">
-        <div class="text-2xl font-bold">OrientSol 3.0</div>
-        <div>
-            <!-- Selector de Idioma -->
-            <select id="langSelector" class="bg-blue-800 text-white p-1 rounded">
-                <option value="es">Español</option>
-                <option value="en">English</option>
-            </select>
+    <!-- BARRA SUPERIOR -->
+    <header class="bg-blue-900 text-white p-4 flex justify-between items-center shadow-md">
+        <div class="flex items-center gap-3">
+            <img src="./assets/img/logo_uja.png" alt="Universidad de Jaén" class="h-8 hidden md:block">
+            <h1 class="text-xl font-bold">OrientSol 3.0 - Web & Desktop</h1>
         </div>
-    </nav>
+        <!-- Selector Bilingüe -->
+        <select id="langSelector" class="bg-blue-800 text-white border border-blue-700 p-1 rounded cursor-pointer hover:bg-blue-700">
+            <option value="es">Español</option>
+            <option value="en">English</option>
+        </select>
+    </header>
 
-    <!-- Contenedor Principal -->
-    <main class="flex flex-col md:flex-row p-4 gap-4 h-screen">
+    <!-- CONTENEDOR PRINCIPAL -->
+    <main class="container mx-auto p-4 grid grid-cols-1 lg:grid-cols-3 gap-6 mt-4">
         
-        <!-- Panel Lateral: Configuración y Datos -->
-        <aside class="w-full md:w-1/3 bg-white p-6 rounded-lg shadow-md">
-
-            <h2 class="text-xl font-semibold mb-4" data-i18n="data_input">1. Entrada de Parámetros</h2>
-
-            <!-- Base de Datos Predeterminada -->
-            <div class="mb-4 bg-blue-50 p-4 rounded border border-blue-200">
-                <label class="block text-sm font-bold mb-1">Base de Datos (Predeterminada)</label>
-                <select id="citySelector" class="w-full border p-2 rounded mb-2">
+        <!-- PANEL IZQUIERDO: Configuración y Datos -->
+        <section class="bg-white p-5 rounded-lg shadow-md lg:col-span-1">
+            <h2 class="text-lg font-bold mb-4 border-b pb-2 text-blue-900">1. Entrada de Parámetros</h2>
+            
+            <!-- Carga Predeterminada (Offline) -->
+            <div class="mb-4 bg-gray-50 p-3 rounded border">
+                <label class="block text-sm font-semibold mb-1" id="lblCity">Base de Datos Predeterminada</label>
+                <select id="citySelector" class="w-full border p-2 rounded text-sm bg-white">
                     <option value="">-- Seleccionar Ciudad --</option>
-                    <!-- Las ciudades de datos_mundo.csv aparecerán aquí automáticamente -->
                 </select>
             </div>
+
+            <!-- Coordenadas -->
+            <div class="grid grid-cols-2 gap-3 mb-4">
+                <div>
+                    <label class="block text-sm font-semibold mb-1" id="lblLat">Latitud (°)</label>
+                    <input type="number" id="latInput" class="w-full border p-2 rounded text-sm" placeholder="Ej: 37.76" step="0.01">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold mb-1" id="lblLon">Longitud (°)</label>
+                    <input type="number" id="lonInput" class="w-full border p-2 rounded text-sm" placeholder="Ej: -3.78" step="0.01">
+                </div>
+            </div>
+
+            <!-- Carga Híbrida: API y CSV -->
+            <div class="mb-5 space-y-3">
+                <button id="btnFetchAPI" class="w-full bg-green-600 hover:bg-green-700 transition text-white p-2 rounded text-sm font-semibold shadow">
+                    Conectar con API (PVGIS/NASA)
+                </button>
+                <div class="text-center">
+                    <label class="block text-xs text-gray-500 mb-1" id="lblUpload">O cargar archivo local (.CSV):</label>
+                    <input type="file" id="csvUpload" accept=".csv" class="w-full text-xs border p-1 rounded bg-gray-50 cursor-pointer">
+                </div>
+            </div>
+
+            <!-- Albedo y Temperatura (Modelo Térmico) -->
+            <div class="grid grid-cols-2 gap-3 mb-4 border-t pt-4">
+                <div>
+                    <label class="block text-sm font-semibold mb-1">Albedo (ρ)</label>
+                    <input type="number" id="albedoInput" value="0.2" min="0.05" max="1" step="0.01" class="w-full border p-2 rounded text-sm">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold mb-1" title="Temperatura de Operación Nominal de la Célula">TONC (°C)</label>
+                    <input type="number" id="toncInput" value="47" min="40" max="55" class="w-full border p-2 rounded text-sm">
+                </div>
+            </div>
+
+            <!-- Tipo de Estudio -->
+            <div class="mb-6">
+                <label class="block text-sm font-semibold mb-1" id="lblStudy">Tipo de Estudio Solar</label>
+                <select id="studyModeSelector" class="w-full border p-2 rounded text-sm bg-white">
+                    <option value="1">Inclinación fija anual</option>
+                    <option value="2">Inclinación fija estacional</option>
+                    <option value="3">Seguimiento a un eje polar</option>
+                    <option value="4">Seguimiento a un eje azimutal</option>
+                    <option value="5">Seguimiento a un eje horizontal</option>
+                    <option value="6">Seguimiento a dos ejes</option>
+                    <option value="7">Estudio Comparativo Completo</option>
+                </select>
+            </div>
+
+            <!-- Botón Principal -->
+            <button id="btnCalculate" class="w-full bg-blue-700 hover:bg-blue-800 transition text-white p-3 rounded font-bold text-sm shadow-lg">
+                Ejecutar Simulación Matemática
+            </button>
+        </section>
+
+        <!-- PANEL DERECHO: Visualización y Exportación -->
+        <section class="bg-white p-5 rounded-lg shadow-md lg:col-span-2 flex flex-col">
+            <h2 class="text-lg font-bold mb-4 border-b pb-2 text-blue-900">2. Análisis de Resultados Energéticos</h2>
             
-            <!-- 1. Campo independiente para la LATITUD -->
-            <div class="mb-4">
-                <label class="block text-sm font-medium mb-1" data-i18n="latitude">Localización (Latitud)</label>
-                <input type="number" id="latInput" class="w-full border p-2 rounded" placeholder="Ej: 37.76">
+            <!-- Selector de Componente para Gráficos/Tablas -->
+            <div class="mb-4 flex gap-3 items-center bg-blue-50 p-3 rounded border border-blue-100">
+                <label class="text-sm font-semibold text-blue-900">Mostrar Componente:</label>
+                <select id="componentSelector" class="border p-1 rounded text-sm bg-white shadow-sm flex-1">
+                    <option value="global">Radiación Global (Gd)</option>
+                    <option value="direct">Radiación Directa (Bd)</option>
+                    <option value="diffuse">Radiación Difusa (Dd)</option>
+                    <option value="albedo">Radiación de Albedo (Rd)</option>
+                </select>
             </div>
 
-            <!-- 2. Campo independiente para la LONGITUD (ESTE ES EL QUE FALTA EN TU IMAGEN) -->
-            <div class="mb-4">
-                <label class="block text-sm font-medium mb-1" data-i18n="longitude">Longitud</label>
-                <input type="number" id="lonInput" class="w-full border p-2 rounded" placeholder="Ej: -3.78">
-            </div>
-
-            <!-- Botón de API -->
-            <div class="mb-4">
-                <label class="block text-sm font-medium mb-1" data-i18n="api_connect">Conectar con PVGIS</label>
-                <button id="btnFetchAPI" data-i18n="api_connect" class="w-full bg-green-600 text-white p-2 rounded hover:bg-green-700">Conectar API</button>
-            </div>
-
-            <!-- Carga de archivo CSV -->
-            <div class="mb-4">
-                <label class="block text-sm font-medium mb-1" data-i18n="csv_upload">O cargar archivo local (.CSV / Excel)</label>
-                <input type="file" id="csvUpload" class="w-full border p-2 rounded text-sm">
-            </div>
-
-            <!-- Botón de Simulación -->
-            <button id="btnCalculate" class="w-full bg-blue-600 text-white p-2 rounded mt-4 font-bold hover:bg-blue-700" data-i18n="calculate">Ejecutar Simulación Matemática</button>
-
-        </aside>
-
-        <!-- Panel Central: Resultados y Gráficas -->
-        <section class="w-full md:w-2/3 bg-white p-6 rounded-lg shadow-md flex flex-col">
-            <h2 class="text-xl font-semibold mb-4" data-i18n="results">Resultados</h2>
-            
-            <!-- Tabla de Resultados -->
-            <div class="overflow-x-auto mb-6">
-                <table class="w-full text-left border-collapse">
+            <!-- Tabla de Resultados Numéricos -->
+            <div class="overflow-x-auto mb-6 flex-1">
+                <table class="w-full text-xs border-collapse border border-gray-300 shadow-sm">
                     <thead>
-                        <tr class="bg-gray-200">
-                            <th class="p-2 border" data-i18n="month">Mes</th>
-                            <th class="p-2 border">Gdm (0º)</th>
-                            <th class="p-2 border" data-i18n="opt_annual">Óptima Anual</th>
+                        <tr class="bg-gray-800 text-white">
+                            <th class="p-2 border border-gray-400">Mes</th>
+                            <th class="p-2 border border-gray-400">Plano Horizontal (0°)</th>
+                            <th class="p-2 border border-gray-400">Estudio Seleccionado</th>
+                            <th class="p-2 border border-gray-400">Ganancia (%)</th>
                         </tr>
                     </thead>
                     <tbody id="resultsTableBody">
-                        <!-- Generado dinámicamente con JS -->
+                        <tr>
+                            <td colspan="4" class="text-center p-6 text-gray-500 italic bg-gray-50">
+                                Introduzca los parámetros y ejecute la simulación para visualizar los resultados.
+                            </td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
 
-            <!-- Área de Gráficos (Canvas) -->
-            <div class="flex-grow bg-gray-50 border rounded flex items-center justify-center">
-                <p class="text-gray-400" data-i18n="chart_placeholder">El gráfico aparecerá aquí...</p>
-                <!-- <canvas id="chartCanvas"></canvas> -->
+            <!-- Contenedor del Gráfico (Reemplaza los 8 archivos Grafica_...m) -->
+            <div class="relative w-full h-64 bg-gray-50 border rounded p-2 mb-4">
+                <canvas id="solarChart"></canvas>
+            </div>
+
+            <!-- Módulo de Exportación -->
+            <div class="mt-auto flex gap-3 pt-4 border-t border-gray-200">
+                <button id="btnExportCSV" class="flex-1 bg-gray-700 hover:bg-gray-800 transition text-white px-4 py-2 rounded text-sm font-semibold shadow">
+                    Exportar a Excel (.CSV)
+                </button>
+                <button id="btnExportPDF" class="flex-1 bg-red-600 hover:bg-red-700 transition text-white px-4 py-2 rounded text-sm font-semibold shadow">
+                    Generar Informe PDF
+                </button>
             </div>
         </section>
-
     </main>
 
-    <!-- Script Principal (Módulo ES6) -->
-    <script type="module" src="src/app.js"></script>
+    <!-- Enlace al Controlador Maestro del MVC -->
+    <script type="module" src="./src/app.js"></script>
 </body>
 </html>
