@@ -102,3 +102,39 @@ export async function fetchWeatherDataAPI(lat, lon) {
         throw error; // Lanzamos el error para que app.js lo atrape y muestre la alerta al usuario
     }
 }
+
+// NUEVA FUNCIÓN: Cargar base de datos predeterminada al iniciar
+export async function loadDefaultDatabase() {
+    try {
+        // Llama al archivo guardado en tu carpeta local
+        const response = await fetch('./input_data/datos_mundo.csv');
+        if (!response.ok) throw new Error("No se pudo cargar la base de datos.");
+        
+        const text = await response.text();
+        const rows = text.split('\n');
+        const cities = [];
+        
+        // Empezamos en i = 1 para saltarnos la primera fila (los títulos)
+        for(let i = 1; i < rows.length; i++) {
+            if(rows[i].trim() === '') continue;
+            const cols = rows[i].split(',');
+            
+            // Si la fila tiene los datos completos
+            if(cols.length >= 15) {
+                cities.push({
+                    name: cols[0], // Nombre de la ciudad
+                    lat: parseFloat(cols[1]),
+                    lon: parseFloat(cols[2]),
+                    // Extrae las 12 columnas de radiación (posiciones 3 a la 14)
+                    radiation: cols.slice(3, 15).map(Number),
+                    // Extrae las 12 columnas de temperatura (posiciones 15 a la 26)
+                    temperature: cols.length >= 27 ? cols.slice(15, 27).map(Number) : new Array(12).fill(20)
+                });
+            }
+        }
+        return cities;
+    } catch (error) {
+        console.error("Error leyendo datos_mundo.csv:", error);
+        return [];
+    }
+}

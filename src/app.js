@@ -4,7 +4,8 @@
 // =========================================================================
 
 import { State } from './state.js';
-import { fetchWeatherDataAPI, handleLocalCSVUpload } from './data.js';
+// IMPORTANTE: Asegúrate de importar la nueva función al inicio de app.js
+import { fetchWeatherDataAPI, handleLocalCSVUpload, loadDefaultDatabase } from './data.js';
 import { optimizeAnnualTilt } from './core/optimizacion.js';
 import { renderResultsTable } from './ui.js';
 import { loadLanguage, updateUIWithLanguage } from '../locales/i18n.js';
@@ -19,6 +20,41 @@ document.addEventListener('DOMContentLoaded', async () => {
         currentLangDict = await loadLanguage(e.target.value);
         updateUIWithLanguage(currentLangDict);
     });
+
+    // === CARGA AUTOMÁTICA DE LA BASE DE DATOS PREDETERMINADA ===
+    const citySelector = document.getElementById('citySelector');
+    if (citySelector) {
+        // 1. Descargamos las ciudades del CSV silenciosamente
+        const defaultCities = await loadDefaultDatabase();
+        
+        // 2. Llenamos el menú desplegable de la interfaz
+        defaultCities.forEach((city, index) => {
+            const option = document.createElement('option');
+            option.value = index;
+            option.textContent = city.name;
+            citySelector.appendChild(option);
+        });
+
+        // 3. Cuando el usuario elija una ciudad ("Ej: Lima (Perú)")
+        citySelector.addEventListener('change', (e) => {
+            const selectedIndex = e.target.value;
+            if (selectedIndex !== "") {
+                const city = defaultCities[selectedIndex];
+                
+                // Auto-rellenar las cajas de texto
+                document.getElementById('latInput').value = city.lat;
+                document.getElementById('lonInput').value = city.lon;
+                
+                // Inyectar datos en la memoria listos para simular
+                State.latitude = city.lat;
+                State.longitude = city.lon;
+                State.monthlyGlobalRadiation = city.radiation;
+                State.temperatureData = city.temperature;
+                
+                console.log(`✅ Base de datos precargada: ${city.name} lista para calcular.`);
+            }
+        });
+    }
 
     // --- 2. CARGA DUAL: MODO ONLINE (API CLIMÁTICA) ---
     document.getElementById('btnFetchAPI').addEventListener('click', async () => {
