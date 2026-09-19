@@ -8,8 +8,8 @@ import { showAlert } from './ui.js';
 // 1. Carga de la Base de Datos Predeterminada (Offline / Contingencia)
 export async function loadDefaultDatabase() {
     try {
-        const response = await fetch('./input_data/datos_mundo.csv');
-        if (!response.ok) throw new Error("Archivo datos_mundo.csv no encontrado.");
+        const response = await fetch('./input_data/BBDD_Mundo.csv');
+        if (!response.ok) throw new Error("Archivo BBDD_Mundo.csv no encontrado.");
         
         const csvText = await response.text();
         const rows = csvText.split('\n');
