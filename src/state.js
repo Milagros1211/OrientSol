@@ -42,6 +42,14 @@ export const State = {
 
     // Método para limpiar resultados previos antes de una nueva simulación
     resetResults() {
-        this.results = { base: {}, optimalAnnual: {} /* ... */ };
+        this.results = { 
+            base: {}, 
+            optimalAnnual: {}, 
+            optimalSeasonal: {},
+            polarAxis: {},
+            azimuthalAxis: {},
+            horizontalAxis: {},
+            dualAxis: {}
+        };
     }
 };
