@@ -27,6 +27,9 @@ export const State = {
         base: { // Plano horizontal (0º)
             global: [], direct: [], diffuse: [], albedo: []
         },
+        tiltedMatrix: { 
+            global: [], direct: [], diffuse: [], albedo: [] 
+        }, // <--- NUEVO: Matriz completa de 0º a 90º
         optimalAnnual: {
             angle: 0,
             global: [], direct: [], diffuse: [], albedo: [],

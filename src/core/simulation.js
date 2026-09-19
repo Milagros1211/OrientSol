@@ -64,6 +64,10 @@ export function runSimulation() {
         targetResultObj.gains = { global: gains.percentages };
     };
 
+    // GUARDAR LA MATRIZ COMPLETA DE BARRIDO EN EL ESTADO
+    State.results.tiltedMatrix.global = globalTiltedMatrix;
+    // Si tuvieras matrices equivalentes para directa, difusa y albedo, se guardarían aquí igual.
+
     // 5. ENRUTADOR DE ESTUDIOS SOLARES (Sustituye switch OPCION_EST)
     switch (studyMode) {
         case 1: // Inclinación Óptima Anual

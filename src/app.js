@@ -9,6 +9,10 @@ import { loadDefaultDatabase, fetchWeatherDataAPI, handleCSVUpload } from './dat
 import { runSimulation } from './core/simulation.js';
 import { updateCharts } from './charts.js';
 import { exportToCSV, generatePDF } from './export.js';
+import { Energy } from './core/energy.js';
+
+const energyModal = document.getElementById('energyModal');
+
 
 document.addEventListener('DOMContentLoaded', async () => {
     
@@ -63,4 +67,65 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 6. Eventos de Exportación
     document.getElementById('btnExportCSV').addEventListener('click', exportToCSV);
     document.getElementById('btnExportPDF').addEventListener('click', generatePDF);
+});
+
+// Abrir modal
+document.getElementById('btnOpenEnergy').addEventListener('click', () => {
+    if (!State.results.base.global || State.results.base.global.length === 0) {
+        alert("Debe ejecutar primero una simulación de radiación en el panel principal.");
+        return;
+    }
+    document.getElementById('energyCity').textContent = State.location.name;
+    document.getElementById('energyLat').textContent = State.location.latitude.toFixed(2);
+    // Sincronizar el TONC del panel principal con el del modal si se desea
+    document.getElementById('toncModalInput').value = document.getElementById('toncInput').value;
+    energyModal.classList.remove('hidden');
+});
+
+// Cerrar modal
+document.getElementById('btnCloseEnergy').addEventListener('click', () => {
+    energyModal.classList.add('hidden');
+});
+
+// Ejecutar cálculo de energía dentro del modal
+document.getElementById('btnCalcEnergy').addEventListener('click', () => {
+    const kwp = parseFloat(document.getElementById('kwpInput').value);
+    const gamma = parseFloat(document.getElementById('gammaInput').value);
+    const tonc = parseFloat(document.getElementById('toncModalInput').value);
+    const temperatures = State.climateData.monthlyTemperature;
+
+    const studyKeys = {
+        1: 'optimalAnnual', 2: 'optimalSeasonal', 3: 'polarAxis',
+        4: 'azimuthalAxis', 5: 'horizontalAxis', 6: 'dualAxis', 7: 'optimalAnnual'
+    };
+    const activeKey = studyKeys[State.parameters.studyMode];
+    
+    const baseGlobalRad = State.results.base.global;
+    const studyGlobalRad = State.results[activeKey].global;
+
+    const baseEnergy = Energy.applyOsterwaldModel(baseGlobalRad, temperatures, kwp, tonc, gamma);
+    const studyEnergy = Energy.applyOsterwaldModel(studyGlobalRad, temperatures, kwp, tonc, gamma);
+
+    // Renderizar tabla interna
+    const tbody = document.getElementById('energyTableBody');
+    const months = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+    
+    let html = '';
+    for(let i=0; i<12; i++) {
+        const gain = studyEnergy.monthlyEnergy[i] - baseEnergy.monthlyEnergy[i];
+        html += `
+            <tr class="hover:bg-blue-50 border-b">
+                <td class="p-1 border bg-blue-400 text-white font-semibold">${months[i]}</td>
+                <td class="p-1 border">${baseEnergy.monthlyEnergy[i].toFixed(2)}</td>
+                <td class="p-1 border font-semibold text-blue-700">${studyEnergy.monthlyEnergy[i].toFixed(2)}</td>
+                <td class="p-1 border text-red-700 font-bold">${gain.toFixed(2)}</td>
+            </tr>
+        `;
+    }
+    tbody.innerHTML = html;
+    
+    document.getElementById('energyTableFoot').classList.remove('hidden');
+    document.getElementById('baseAnnualEnergy').textContent = baseEnergy.annualEnergy.toFixed(1);
+    document.getElementById('studyAnnualEnergy').textContent = studyEnergy.annualEnergy.toFixed(1);
+    document.getElementById('gainAnnualEnergy').textContent = (studyEnergy.annualEnergy - baseEnergy.annualEnergy).toFixed(2);
 });
