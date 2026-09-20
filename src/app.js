@@ -8,63 +8,56 @@ import { runSimulation } from './core/simulation.js';
 import { updateCharts } from './charts.js';
 import { exportToCSV, generatePDF } from './export.js';
 import { Energy } from './core/energy.js';
+import { loadLanguage, updateUIWithLanguage } from '../locales/i18n.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
     
-    // Carga de base de datos
+    // 1. Cargamos la base de datos (Esto activa el citySelector)
     await loadDefaultDatabase();
 
-    // ==========================================
-    // LÓGICA DE TRADUCCIÓN BILINGÜE
-    // ==========================================
+    // 2. Cargamos el diccionario de idioma
+    State.ui.dict = await loadLanguage(State.ui.currentLang || 'es');
+    if (State.ui.dict) {
+        updateUIWithLanguage(State.ui.dict);
+        updateSelects(State.ui.dict);
+    }
+
+    // 3. Evento de Cambio de Idioma Bilingüe
     const langSelector = document.getElementById('langSelector');
     langSelector.addEventListener('change', async (e) => {
         State.ui.currentLang = e.target.value;
-        try {
-            // Llama a los archivos locales/es.json o locales/en.json
-            const response = await fetch(`./locales/${State.ui.currentLang}.json`);
-            if(!response.ok) throw new Error("Diccionario no encontrado");
-            const t = await response.json();
+        State.ui.dict = await loadLanguage(State.ui.currentLang);
+        
+        if (State.ui.dict) {
+            updateUIWithLanguage(State.ui.dict);
+            updateSelects(State.ui.dict);
             
-            // Actualizar etiquetas estáticas
-            document.getElementById('lblAppTitle').textContent = t.appTitle || "OrientSol 3.0";
-            document.getElementById('lblInputPanel').textContent = t.panelInputTitle || "1. Entrada de Parámetros";
-            document.getElementById('lblCity').textContent = t.defaultDbLabel || "Base de Datos";
-            document.getElementById('lblLat').textContent = t.latitudeLabel || "Latitud (°)";
-            document.getElementById('lblLon').textContent = t.longitudeLabel || "Longitud (°)";
-            document.getElementById('btnFetchAPI').textContent = t.btnFetchApi || "Conectar con API";
-            document.getElementById('lblUpload').textContent = t.lblUploadCsv || "O cargar CSV:";
-            document.getElementById('lblStudy').textContent = t.studyTypeLabel || "Tipo de Estudio";
-            document.getElementById('btnCalculate').textContent = t.btnCalculate || "Calcular";
-            document.getElementById('lblResultsPanel').textContent = t.panelOutputTitle || "2. Análisis";
-            document.getElementById('lblComponent').textContent = t.componentLabel || "Componente:";
-            document.getElementById('btnExportCSV').textContent = t.btnExportCsv || "Exportar CSV";
-            document.getElementById('btnExportPDF').textContent = t.btnExportPdf || "Generar PDF";
-            
-            // Actualizar selector de estudios
-            const studySelect = document.getElementById('studyModeSelector');
-            if(t.studies) {
-                studySelect.options[0].text = t.studies["1"];
-                studySelect.options[1].text = t.studies["2"];
-                studySelect.options[2].text = t.studies["3"];
-                studySelect.options[3].text = t.studies["4"];
-                studySelect.options[4].text = t.studies["5"];
-                studySelect.options[5].text = t.studies["6"];
-                studySelect.options[6].text = t.studies["7"];
+            // Refresca la tabla si ya hay datos calculados
+            if (State.results.base.global && State.results.base.global.length > 0) {
+                renderResultsTable();
             }
-
-            // Actualizar componentes
-            const compSelect = document.getElementById('componentSelector');
-            if(t.components) {
-                compSelect.options[0].text = t.components["global"];
-                compSelect.options[1].text = t.components["direct"];
-                compSelect.options[2].text = t.components["diffuse"];
-                compSelect.options[3].text = t.components["albedo"];
-            }
-        } catch (error) {
-            console.error("Error al traducir:", error);
         }
     });
+
+    function updateSelects(dict) {
+        const studySelect = document.getElementById('studyModeSelector');
+        if (dict.studies) {
+            studySelect.options[0].text = dict.studies["1"];
+            studySelect.options[1].text = dict.studies["2"];
+            studySelect.options[2].text = dict.studies["3"];
+            studySelect.options[3].text = dict.studies["4"];
+            studySelect.options[4].text = dict.studies["5"];
+            studySelect.options[5].text = dict.studies["6"];
+            studySelect.options[6].text = dict.studies["7"];
+        }
+        const compSelect = document.getElementById('componentSelector');
+        if (dict.components) {
+            compSelect.options[0].text = dict.components["global"];
+            compSelect.options[1].text = dict.components["direct"];
+            compSelect.options[2].text = dict.components["diffuse"];
+            compSelect.options[3].text = dict.components["albedo"];
+        }
+    }
 
     // ==========================================
     // EVENTOS PRINCIPALES
@@ -115,26 +108,19 @@ document.addEventListener('DOMContentLoaded', async () => {
         energyModal.classList.remove('hidden');
     });
 
-    // Botones de cerrado (Volver y Salir)
     document.getElementById('btnCloseEnergy').addEventListener('click', () => { energyModal.classList.add('hidden'); });
     document.getElementById('btnExitEnergy').addEventListener('click', () => { energyModal.classList.add('hidden'); });
 
-    // Ejecutar Osterwald
-    // 4. Calcular Energía de Osterwald
     document.getElementById('btnCalcEnergy').addEventListener('click', () => {
         const kwp = parseFloat(document.getElementById('kwpInput').value);
         const gamma = parseFloat(document.getElementById('gammaInput').value);
-        
-        // CORRECCIÓN: Leemos específicamente el input de la TONC que está dentro del Modal
         const tonc = parseFloat(document.getElementById('toncModalInput').value); 
         const temperatures = State.climateData.monthlyTemperature;
 
-        // Validación de seguridad
         if (isNaN(kwp) || isNaN(gamma) || isNaN(tonc)) {
-            return showAlert("Por favor, revise que los valores del panel (kWp, γ, TONC) sean numéricos.", true);
+            return showAlert("Por favor, revise que los valores del panel sean numéricos.", true);
         }
 
-        // Identificar el estudio activo en el panel principal
         const studyKeys = {
             1: 'optimalAnnual', 2: 'optimalSeasonal', 3: 'polarAxis',
             4: 'azimuthalAxis', 5: 'horizontalAxis', 6: 'dualAxis', 7: 'optimalAnnual'
@@ -145,14 +131,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         const studyGlobalRad = State.results[activeKey].global;
 
         if (!studyGlobalRad || studyGlobalRad.length === 0) {
-            return showAlert("No se han encontrado resultados de radiación para el estudio seleccionado.", true);
+            return showAlert("No se han encontrado resultados de radiación.", true);
         }
 
-        // Ejecutar modelo térmico de Osterwald importado desde core
         const baseEnergy = Energy.applyOsterwaldModel(baseGlobalRad, temperatures, kwp, tonc, gamma);
         const studyEnergy = Energy.applyOsterwaldModel(studyGlobalRad, temperatures, kwp, tonc, gamma);
 
-        // Renderizar Tabla de Energía en el Modal
         const tbody = document.getElementById('energyTableBody');
         const months = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
         
@@ -169,20 +153,17 @@ document.addEventListener('DOMContentLoaded', async () => {
             `;
         }
         tbody.innerHTML = html;
-        
-        // Renderizar Fila de Totales Anuales
         document.getElementById('energyTableFoot').classList.remove('hidden');
         document.getElementById('baseAnnualEnergy').textContent = baseEnergy.annualEnergy.toFixed(1);
         document.getElementById('studyAnnualEnergy').textContent = studyEnergy.annualEnergy.toFixed(1);
         document.getElementById('gainAnnualEnergy').textContent = (studyEnergy.annualEnergy - baseEnergy.annualEnergy).toFixed(2);
     });
 
-    // Botones de Exportación dentro del modal
     document.getElementById('btnExportEnergyCSV').addEventListener('click', () => {
         showAlert("Exportando CSV de Energía...");
-        exportToCSV(); // Conectado temporalmente al motor genérico de exportación
+        exportToCSV(); 
     });
     document.getElementById('btnExportEnergyPDF').addEventListener('click', () => {
-        generatePDF(); // Conectado al generador global de informes
+        generatePDF(); 
     });
 });

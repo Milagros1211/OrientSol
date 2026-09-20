@@ -46,7 +46,8 @@ export const State = {
     // 4. Estado de la Interfaz
     ui: {
         activeComponent: 'global', // Opciones: 'global', 'direct', 'diffuse', 'albedo'
-        currentLang: 'es'
+        currentLang: 'es',
+        dict: {} // Diccionario de traducciones cargado desde i18n.js
     },
 
     // Método para limpiar resultados previos antes de una nueva simulación

@@ -4,81 +4,69 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OrientSol 3.0 - Laboratorio Virtual Fotovoltaico</title>
-    <!-- Tailwind CSS para diseño rápido y responsivo -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Tu hoja de estilos personalizada -->
     <link rel="stylesheet" href="./assets/css/style.css">
-    <!-- Chart.js para los gráficos dinámicos -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body class="bg-gray-100 text-gray-800 font-sans">
 
-    <!-- BARRA SUPERIOR -->
     <header class="bg-blue-900 text-white p-4 flex justify-between items-center shadow-md">
         <div class="flex items-center gap-3">
             <img src="./assets/img/ujaen.png" alt="Universidad de Jaén" class="h-8 hidden md:block">
-            <h1 class="text-xl font-bold">OrientSol 3.0 - Web & Desktop</h1>
+            <h1 data-i18n="appTitle" class="text-xl font-bold">OrientSol 3.0 - Web & Desktop</h1>
         </div>
-        <!-- Selector Bilingüe -->
         <select id="langSelector" class="bg-blue-800 text-white border border-blue-700 p-1 rounded cursor-pointer hover:bg-blue-700">
             <option value="es">Español</option>
             <option value="en">English</option>
         </select>
     </header>
 
-    <!-- CONTENEDOR PRINCIPAL -->
     <main class="container mx-auto p-4 grid grid-cols-1 lg:grid-cols-3 gap-6 mt-4">
         
-        <!-- PANEL IZQUIERDO: Configuración y Datos -->
         <section class="bg-white p-5 rounded-lg shadow-md lg:col-span-1">
-            <h2 class="text-lg font-bold mb-4 border-b pb-2 text-blue-900">1. Entrada de Parámetros</h2>
+            <h2 data-i18n="panelInputTitle" class="text-lg font-bold mb-4 border-b pb-2 text-blue-900">1. Entrada de Parámetros</h2>
             
-            <!-- Carga Predeterminada (Offline) -->
             <div class="mb-4 bg-gray-50 p-3 rounded border">
-                <label class="block text-sm font-semibold mb-1" id="lblCity">Base de Datos Predeterminada</label>
+                <label data-i18n="defaultDbLabel" class="block text-sm font-semibold mb-1" id="lblCity">Base de Datos Predeterminada</label>
                 <select id="citySelector" class="w-full border p-2 rounded text-sm bg-white">
                     <option value="">-- Seleccionar Ciudad --</option>
                 </select>
             </div>
 
-            <!-- Coordenadas -->
             <div class="grid grid-cols-2 gap-3 mb-4">
                 <div>
-                    <label class="block text-sm font-semibold mb-1" id="lblLat">Latitud (°)</label>
+                    <label data-i18n="latitudeLabel" class="block text-sm font-semibold mb-1" id="lblLat">Latitud (°)</label>
                     <input type="number" id="latInput" class="w-full border p-2 rounded text-sm" placeholder="Ej: 37.76" step="0.01">
                 </div>
                 <div>
-                    <label class="block text-sm font-semibold mb-1" id="lblLon">Longitud (°)</label>
+                    <label data-i18n="longitudeLabel" class="block text-sm font-semibold mb-1" id="lblLon">Longitud (°)</label>
                     <input type="number" id="lonInput" class="w-full border p-2 rounded text-sm" placeholder="Ej: -3.78" step="0.01">
                 </div>
             </div>
 
-            <!-- Carga Híbrida: API y CSV -->
             <div class="mb-5 space-y-3">
-                <button id="btnFetchAPI" class="w-full bg-green-600 hover:bg-green-700 transition text-white p-2 rounded text-sm font-semibold shadow">
+                <button data-i18n="btnFetchApi" id="btnFetchAPI" class="w-full bg-green-600 hover:bg-green-700 transition text-white p-2 rounded text-sm font-semibold shadow">
                     Conectar con API (PVGIS/NASA)
                 </button>
                 <div class="text-center">
-                    <label class="block text-xs text-gray-500 mb-1" id="lblUpload">O cargar archivo local (.CSV):</label>
+                    <label data-i18n="lblUploadCsv" class="block text-xs text-gray-500 mb-1" id="lblUpload">O cargar archivo local (.CSV):</label>
                     <input type="file" id="csvUpload" accept=".csv" class="w-full text-xs border p-1 rounded bg-gray-50 cursor-pointer">
                 </div>
             </div>
 
-            <!-- Albedo y Temperatura (Modelo Térmico) -->
             <div class="grid grid-cols-2 gap-3 mb-4 border-t pt-4">
                 <div>
-                    <label class="block text-sm font-semibold mb-1">Albedo</label>
+                    <label data-i18n="albedoLabel" class="block text-sm font-semibold mb-1">Albedo (ρ)</label>
                     <input type="number" id="albedoInput" value="0.2" min="0.05" max="1" step="0.01" class="w-full border p-2 rounded text-sm">
                 </div>
                 <div>
-                    <label class="block text-sm font-semibold mb-1" title="Temperatura de Operación Nominal de la Célula">TONC (°C)</label>
+                    <label data-i18n="toncLabel" class="block text-sm font-semibold mb-1" title="Temperatura de Operación Nominal de la Célula">TONC (°C)</label>
                     <input type="number" id="toncInput" value="47" min="40" max="55" class="w-full border p-2 rounded text-sm">
                 </div>
             </div>
 
-            <!-- Tipo de Estudio -->
             <div class="mb-6">
-                <label class="block text-sm font-semibold mb-1" id="lblStudy">Tipo de Estudio Solar</label>
+                <label data-i18n="studyTypeLabel" class="block text-sm font-semibold mb-1" id="lblStudy">Tipo de Estudio Solar</label>
                 <select id="studyModeSelector" class="w-full border p-2 rounded text-sm bg-white">
                     <option value="1">Inclinación fija anual</option>
                     <option value="2">Inclinación fija estacional</option>
@@ -90,19 +78,16 @@
                 </select>
             </div>
 
-            <!-- Botón Principal -->
-            <button id="btnCalculate" class="w-full bg-blue-700 hover:bg-blue-800 transition text-white p-3 rounded font-bold text-sm shadow-lg">
+            <button data-i18n="btnCalculate" id="btnCalculate" class="w-full bg-blue-700 hover:bg-blue-800 transition text-white p-3 rounded font-bold text-sm shadow-lg">
                 Ejecutar Simulación Matemática
             </button>
         </section>
 
-        <!-- PANEL DERECHO: Visualización y Exportación -->
         <section class="bg-white p-5 rounded-lg shadow-md lg:col-span-2 flex flex-col">
-            <h2 class="text-lg font-bold mb-4 border-b pb-2 text-blue-900">2. Análisis de Resultados Energéticos</h2>
+            <h2 data-i18n="panelOutputTitle" class="text-lg font-bold mb-4 border-b pb-2 text-blue-900">2. Análisis de Resultados Energéticos</h2>
             
-            <!-- Selector de Componente para Gráficos/Tablas -->
             <div class="mb-4 flex gap-3 items-center bg-blue-50 p-3 rounded border border-blue-100">
-                <label class="text-sm font-semibold text-blue-900">Mostrar Componente:</label>
+                <label data-i18n="componentLabel" class="text-sm font-semibold text-blue-900">Mostrar Componente:</label>
                 <select id="componentSelector" class="border p-1 rounded text-sm bg-white shadow-sm flex-1">
                     <option value="global">Radiación Global (Gd)</option>
                     <option value="direct">Radiación Directa (Bd)</option>
@@ -111,20 +96,14 @@
                 </select>
             </div>
 
-            <!-- Tabla de Resultados Numéricos -->
             <div class="overflow-x-auto mb-6 flex-1">
                 <table class="w-full text-xs border-collapse border border-gray-300 shadow-sm">
                     <thead>
-                        <tr class="bg-gray-800 text-white">
-                            <th class="p-2 border border-gray-400">Mes</th>
-                            <th class="p-2 border border-gray-400">Plano Horizontal (0°)</th>
-                            <th class="p-2 border border-gray-400">Estudio Seleccionado</th>
-                            <th class="p-2 border border-gray-400">Ganancia (%)</th>
-                        </tr>
+                        <!-- Se renderiza desde JS -->
                     </thead>
                     <tbody id="resultsTableBody">
                         <tr>
-                            <td colspan="4" class="text-center p-6 text-gray-500 italic bg-gray-50">
+                            <td data-i18n="emptyTableMsg" colspan="4" class="text-center p-6 text-gray-500 italic bg-gray-50">
                                 Introduzca los parámetros y ejecute la simulación para visualizar los resultados.
                             </td>
                         </tr>
@@ -132,110 +111,93 @@
                 </table>
             </div>
 
-            <!-- Contenedor del Gráfico (Reemplaza los 8 archivos Grafica_...m) -->
             <div class="relative w-full h-64 bg-gray-50 border rounded p-2 mb-4">
                 <canvas id="solarChart"></canvas>
             </div>
 
-            <!-- Módulo de Energía y Exportación -->
             <div class="mt-auto flex gap-3 pt-4 border-t border-gray-200">
                 <button id="btnOpenEnergy" class="flex-1 bg-gray-200 hover:bg-gray-300 transition text-black border border-gray-400 px-4 py-2 rounded text-sm font-semibold shadow">
                     Cálculo de energía
                 </button>
-                <button id="btnExportCSV" class="flex-1 bg-gray-700 hover:bg-gray-800 transition text-white px-4 py-2 rounded text-sm font-semibold shadow">
+                <button data-i18n="btnExportCsv" id="btnExportCSV" class="flex-1 bg-gray-700 hover:bg-gray-800 transition text-white px-4 py-2 rounded text-sm font-semibold shadow">
                     Exportar a Excel (.CSV)
                 </button>
-                <button id="btnExportPDF" class="flex-1 bg-red-600 hover:bg-red-700 transition text-white px-4 py-2 rounded text-sm font-semibold shadow">
+                <button data-i18n="btnExportPdf" id="btnExportPDF" class="flex-1 bg-red-600 hover:bg-red-700 transition text-white px-4 py-2 rounded text-sm font-semibold shadow">
                     Generar Informe PDF
                 </button>
             </div>
-
         </section>
 
-        <!-- VENTANA MODAL: CÁLCULO DE ENERGÍA DE OSTERWALD -->
-    <div id="energyModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div class="bg-white rounded-lg shadow-xl w-11/12 max-w-5xl flex overflow-hidden">
-            
-            <!-- Panel Izquierdo del Modal (Inputs) -->
-            <div class="w-1/3 bg-blue-50 p-6 border-r border-blue-200 flex flex-col gap-4">
-                <div class="bg-blue-200 text-blue-800 font-semibold p-2 text-center rounded">Introduzca los valores y pulse Calcular</div>
-                
-                <div>
-                    <label class="block text-sm text-gray-700 font-semibold">Potencia pico instalada (kWp):</label>
-                    <input type="number" id="kwpInput" value="10" class="w-full border p-2 rounded mt-1">
-                </div>
-                
-                <div class="border-t border-blue-300 pt-4 mt-2">
-                    <label class="block text-sm font-bold text-orange-500 mb-3">Para tecnología de silicio monocristalino</label>
-                    
-                    <div class="flex items-center justify-between mb-3">
-                        <label class="text-sm font-semibold">γ (1/ºC):</label>
-                        <input type="number" id="gammaInput" value="-0.0035" step="0.0001" class="w-24 border p-1 rounded text-right">
+        <!-- VENTANA MODAL (Mantenida idéntica a tu código base) -->
+        <div id="energyModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div class="bg-white rounded-lg shadow-xl w-11/12 max-w-5xl flex overflow-hidden">
+                <!-- Panel Izquierdo Modal -->
+                <div class="w-1/3 bg-blue-50 p-6 border-r border-blue-200 flex flex-col gap-4">
+                    <div class="bg-blue-200 text-blue-800 font-semibold p-2 text-center rounded">Introduzca los valores y pulse Calcular</div>
+                    <div>
+                        <label class="block text-sm text-gray-700 font-semibold">Potencia pico instalada (kWp):</label>
+                        <input type="number" id="kwpInput" value="10" class="w-full border p-2 rounded mt-1">
                     </div>
-                    
-                    <div class="flex items-center justify-between">
-                        <label class="text-sm font-semibold">TONC (ºC):</label>
-                        <input type="number" id="toncModalInput" value="47" class="w-24 border p-1 rounded text-right">
+                    <div class="border-t border-blue-300 pt-4 mt-2">
+                        <label class="block text-sm font-bold text-orange-500 mb-3">Para tecnología de silicio monocristalino</label>
+                        <div class="flex items-center justify-between mb-3">
+                            <label class="text-sm font-semibold">γ (1/ºC):</label>
+                            <input type="number" id="gammaInput" value="-0.0035" step="0.0001" class="w-24 border p-1 rounded text-right">
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <label class="text-sm font-semibold">TONC (ºC):</label>
+                            <input type="number" id="toncModalInput" value="47" class="w-24 border p-1 rounded text-right">
+                        </div>
+                    </div>
+                    <div class="mt-auto">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-xs text-blue-600">Método implementado: Osterwald</span>
+                            <button class="bg-gray-300 text-xs px-2 py-1 rounded hover:bg-gray-400">Información</button>
+                        </div>
+                        <button id="btnCalcEnergy" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded shadow">Calcular</button>
+                    </div>
+                    <div class="flex gap-2 mt-2">
+                        <button id="btnCloseEnergy" class="flex-1 bg-gray-200 border p-2 rounded text-sm hover:bg-gray-300">Volver</button>
+                        <button id="btnExitEnergy" class="flex-1 bg-gray-200 border p-2 rounded text-sm hover:bg-gray-300">Salir</button>
                     </div>
                 </div>
-                
-                <div class="mt-auto">
-                    <div class="flex justify-between items-center mb-2">
-                        <span class="text-xs text-blue-600">Método implementado: Osterwald</span>
-                        <button class="bg-gray-300 text-xs px-2 py-1 rounded hover:bg-gray-400">Información</button>
+                <!-- Panel Derecho Modal -->
+                <div class="w-2/3 p-6 flex flex-col">
+                    <div class="flex justify-between border-b pb-2 mb-4">
+                        <div class="text-sm"><span class="font-bold">Ciudad:</span> <span id="energyCity" class="text-blue-600">--</span></div>
+                        <div class="text-sm"><span class="font-bold">Latitud (°):</span> <span id="energyLat" class="text-blue-600">--</span></div>
                     </div>
-                    <button id="btnCalcEnergy" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded shadow">Calcular</button>
-                </div>
-                
-                <div class="flex gap-2 mt-2">
-                    <button id="btnCloseEnergy" class="flex-1 bg-gray-200 border p-2 rounded text-sm hover:bg-gray-300">Volver</button>
-                    <button id="btnExitEnergy" class="flex-1 bg-gray-200 border p-2 rounded text-sm hover:bg-gray-300">Salir</button>
-                </div>
-
-            </div>
-
-            <!-- Panel Derecho del Modal (Tabla de Resultados) -->
-            <div class="w-2/3 p-6 flex flex-col">
-                <div class="flex justify-between border-b pb-2 mb-4">
-                    <div class="text-sm"><span class="font-bold">Ciudad:</span> <span id="energyCity" class="text-blue-600">--</span></div>
-                    <div class="text-sm"><span class="font-bold">Latitud (°):</span> <span id="energyLat" class="text-blue-600">--</span></div>
-                </div>
-                
-                <h3 class="text-gray-600 font-semibold mb-2">Energía media mensual (kWh)</h3>
-                
-                <table class="w-full text-sm border-collapse text-center">
-                    <thead>
-                        <tr class="bg-blue-500 text-white">
-                            <th class="border p-2 bg-blue-600">Mes</th>
-                            <th class="border p-2">Superficie horizontal</th>
-                            <th class="border p-2">Estudio realizado</th>
-                            <th class="border p-2 bg-red-900">Ganancia (kWh)</th>
-                        </tr>
-                    </thead>
-                    <tbody id="energyTableBody">
-                        <tr><td colspan="4" class="p-6 text-gray-500">Pulse calcular para estimar la energía.</td></tr>
-                    </tbody>
-                    <tfoot id="energyTableFoot" class="font-bold bg-blue-900 text-white hidden">
-                        <tr>
-                            <td class="p-2 border">ANUAL</td>
-                            <td id="baseAnnualEnergy" class="p-2 border bg-white text-black"></td>
-                            <td id="studyAnnualEnergy" class="p-2 border bg-white text-black"></td>
-                            <td id="gainAnnualEnergy" class="p-2 border bg-white text-black"></td>
-                        </tr>
-                    </tfoot>
-                </table>
-                
-                <div class="mt-auto flex justify-end gap-3 pt-4">
-                    <button id="btnExportEnergyCSV" class="bg-gray-200 hover:bg-gray-300 transition border px-4 py-2 rounded text-sm font-semibold">Exportar a Excel</button>
-                    <button id="btnExportEnergyPDF" class="bg-gray-200 hover:bg-gray-300 transition border px-4 py-2 rounded text-sm font-semibold">Generar un informe</button>
+                    <h3 class="text-gray-600 font-semibold mb-2">Energía media mensual (kWh)</h3>
+                    <table class="w-full text-sm border-collapse text-center">
+                        <thead>
+                            <tr class="bg-blue-500 text-white">
+                                <th class="border p-2 bg-blue-600">Mes</th>
+                                <th class="border p-2">Superficie horizontal</th>
+                                <th class="border p-2">Estudio realizado</th>
+                                <th class="border p-2 bg-red-900">Ganancia (kWh)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="energyTableBody">
+                            <tr><td colspan="4" class="p-6 text-gray-500">Pulse calcular para estimar la energía.</td></tr>
+                        </tbody>
+                        <tfoot id="energyTableFoot" class="font-bold bg-blue-900 text-white hidden">
+                            <tr>
+                                <td class="p-2 border">ANUAL</td>
+                                <td id="baseAnnualEnergy" class="p-2 border bg-white text-black"></td>
+                                <td id="studyAnnualEnergy" class="p-2 border bg-white text-black"></td>
+                                <td id="gainAnnualEnergy" class="p-2 border bg-white text-black"></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                    <div class="mt-auto flex justify-end gap-3 pt-4">
+                        <button id="btnExportEnergyCSV" class="bg-gray-200 hover:bg-gray-300 transition border px-4 py-2 rounded text-sm font-semibold">Exportar a Excel</button>
+                        <button id="btnExportEnergyPDF" class="bg-gray-200 hover:bg-gray-300 transition border px-4 py-2 rounded text-sm font-semibold">Generar un informe</button>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-
     </main>
 
-    <!-- Enlace al Controlador Maestro del MVC -->
     <script type="module" src="./src/app.js"></script>
 </body>
 </html>

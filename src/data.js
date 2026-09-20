@@ -2,14 +2,16 @@
 // Archivo: src/data.js
 // Propósito: Gestión asíncrona de datos (API PVGIS y parser CSV local)
 // ==========================================
-import { State } from './state.js';
-import { showAlert } from './ui.js';
+import { State } from './state.js'
+import { showAlert } from './ui.js'
 
 // 1. Carga de la Base de Datos Predeterminada (Offline / Contingencia)
 export async function loadDefaultDatabase() {
     try {
-        const response = await fetch('./input_data/BBDD_Mundo.csv');
-        if (!response.ok) throw new Error("Archivo BBDD_Mundo.csv no encontrado.");
+        // CORRECCIÓN: El nombre debe coincidir EXACTAMENTE con tu jerarquía
+        const response = await fetch('./input_data/BBDD_Mundo.csv'); 
+        
+        if (!response.ok) throw new Error("Archivo de base de datos no encontrado.");
         
         const csvText = await response.text();
         const rows = csvText.split('\n');
