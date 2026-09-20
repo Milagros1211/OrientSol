@@ -11,7 +11,6 @@ export const Geometry = {
 
     /**
      * Calcula la declinación solar (δ) para los días representativos.
-     * Sustituye a matriz_declinacion.m
      * Fórmula: δ = 23.45 * sin(360 * (284 + n) / 365)
      */
     getDeclinations() {
@@ -23,13 +22,11 @@ export const Geometry = {
 
     /**
      * Calcula el ángulo horario de puesta de sol (ωs).
-     * Sustituye a AngulosSalida.m
      * Fórmula: cos(ωs) = -tan(φ) * tan(δ)
      */
     getSunsetHourAngles(latitudeRad, declinations) {
         return declinations.map(dec => {
             let cosWs = -Math.tan(latitudeRad) * Math.tan(dec);
-            // Acotamiento para latitudes extremas (noche polar / sol de medianoche)
             if (cosWs > 1) cosWs = 1;
             if (cosWs < -1) cosWs = -1;
             return Math.acos(cosWs);
@@ -38,13 +35,11 @@ export const Geometry = {
 
     /**
      * Genera la matriz de ángulos horarios (ω) desde la salida hasta la puesta de sol.
-     * Sustituye la generación iterativa de Angulos.m y Angulos2.m
      */
     getHourAnglesMatrix(sunsetHourAngles) {
         const hourAnglesMatrix = [];
         sunsetHourAngles.forEach(ws => {
             const dailyAngles = [];
-            // Intervalos de 1 hora (15º o π/12 rad) desde -ws hasta +ws
             for (let w = -ws; w <= ws; w += (Math.PI / 12)) {
                 dailyAngles.push(w);
             }
@@ -55,8 +50,6 @@ export const Geometry = {
 
     /**
      * Calcula la altura solar (αs) para cada hora de sol útil.
-     * Sustituye a Altura_Solar.m
-     * Fórmula: sin(αs) = sin(δ)*sin(φ) + cos(δ)*cos(φ)*cos(ω)
      */
     getSolarAltitude(latitudeRad, declinations, hourAnglesMatrix) {
         return hourAnglesMatrix.map((dailyAngles, monthIdx) => {
@@ -71,8 +64,6 @@ export const Geometry = {
 
     /**
      * Calcula el azimut solar (ψs) para cada hora de sol útil.
-     * Sustituye a Azimut_Solar.m
-     * Fórmula: cos(ψs) = (sin(αs)*sin(φ) - sin(δ)) / (cos(αs)*cos(φ))
      */
     getSolarAzimuth(solarAltitudeMatrix, latitudeRad, declinations, hourAnglesMatrix) {
         return solarAltitudeMatrix.map((dailyAltitudes, monthIdx) => {
@@ -82,12 +73,10 @@ export const Geometry = {
                 let cosPsi = (Math.sin(alpha) * Math.sin(latitudeRad) - Math.sin(dec)) / 
                              (Math.cos(alpha) * Math.cos(latitudeRad));
                 
-                // Corrección de desbordamiento numérico
                 if (cosPsi > 1) cosPsi = 1;
                 if (cosPsi < -1) cosPsi = -1;
                 
                 let psi = Math.acos(cosPsi);
-                // Corrección por convención de la mañana/tarde
                 if (w > 0) psi = -psi; 
                 return psi;
             });

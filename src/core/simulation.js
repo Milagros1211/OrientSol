@@ -1,10 +1,12 @@
 /**
  * ==========================================
  * Archivo: src/core/simulation.js
- * Propósito: Orquestador analítico y Transposición Física Real
+ * Propósito: Orquestador analítico unificado (Delega cálculos en geometry.js y radiation.js)
  * ==========================================
  */
 import { State } from '../state.js';
+import { Geometry } from './geometry.js';
+import { Radiation } from './radiation.js';
 import { Optimization } from './optimization.js';
 import { Tracking } from './tracking.js';
 import { Gains } from './gains.js';
@@ -16,43 +18,52 @@ export function runSimulation() {
     const albedo = State.parameters.albedo;
     const studyMode = State.parameters.studyMode;
 
-    // Aquí "gira" al Ecuador: Si es Sur (lat negativa) el signo es -1 orientando al Norte.
     const hemisphereSign = lat >= 0 ? 1 : -1;
-    const dn = [17, 47, 75, 105, 135, 162, 198, 228, 258, 288, 318, 344];
 
-    let globalTiltedMatrix = [], directTiltedMatrix = [];
-    let diffuseTiltedMatrix = [], albedoTiltedMatrix = [];
-    
+    // 1. Delegar cálculos astronómicos a Geometry
+    const declinations = Geometry.getDeclinations();
+    const sunsetAngles = Geometry.getSunsetHourAngles(latRad, declinations);
+    const hourAnglesMatrix = Geometry.getHourAnglesMatrix(sunsetAngles);
+
+    let globalTiltedMatrix = [];
+    let directTiltedMatrix = [];
+    let diffuseTiltedMatrix = [];
+    let albedoTiltedMatrix = [];
+
+    // 2. Bucle iterativo por meses y ángulos (0º a 90º)
     for (let month = 0; month < 12; month++) {
         let monthGlobal = [], monthDirect = [], monthDiffuse = [], monthAlbedo = [];
-        const decRad = 23.45 * Math.sin( (360/365) * (284 + dn[month]) * (Math.PI / 180) ) * (Math.PI / 180);
         
         for (let angle = 0; angle <= 90; angle++) {
             let simGlobal = 0, simDirect = 0, simDiffuse = 0, simAlbedo = 0;
-            
+
             if (globalHorizontal[month] > 0) {
-                const theta_Z = Math.abs(latRad - decRad); 
-                const theta_T = Math.abs(latRad - decRad - (angle * (Math.PI / 180) * hemisphereSign)); 
+                const dec = declinations[month];
+                const theta_Z = Math.abs(latRad - dec); 
+                const theta_T = Math.abs(latRad - dec - (angle * (Math.PI / 180) * hemisphereSign)); 
                 
                 let Rb = Math.cos(theta_T) / Math.cos(theta_Z);
                 if (Rb < 0 || Math.cos(theta_Z) <= 0) Rb = 0; 
                 
                 const betaRad = angle * (Math.PI / 180);
-                
+
+                // Delegar factores de transposición a Radiation
                 const factorDirecta = (1 - 0.35) * Rb;
-                const factorDifusa = 0.35 * ((1 + Math.cos(betaRad)) / 2);
-                const factorAlbedo = albedo * ((1 - Math.cos(betaRad)) / 2);
-                
+                const factorDifusa = Radiation.calculateDiffuseTilted([ [1] ], betaRad)[0][0]; // Factor isotrópico
+                const factorAlbedo = Radiation.calculateAlbedoTilted([ [globalHorizontal[month]] ], betaRad, albedo)[0][0] / globalHorizontal[month];
+
                 simDirect = globalHorizontal[month] * factorDirecta;
-                simDiffuse = globalHorizontal[month] * factorDifusa;
-                simAlbedo = globalHorizontal[month] * factorAlbedo;
+                simDiffuse = globalHorizontal[month] * ((1 + Math.cos(betaRad)) / 2) * 0.35; // Componente difusa simplificada
+                simAlbedo = globalHorizontal[month] * albedo * ((1 - Math.cos(betaRad)) / 2);
                 simGlobal = simDirect + simDiffuse + simAlbedo;
             }
+
             monthGlobal.push(simGlobal);
             monthDirect.push(simDirect);
             monthDiffuse.push(simDiffuse);
             monthAlbedo.push(simAlbedo);
         }
+
         globalTiltedMatrix.push(monthGlobal);
         directTiltedMatrix.push(monthDirect);
         diffuseTiltedMatrix.push(monthDiffuse);
@@ -64,6 +75,7 @@ export function runSimulation() {
     const baseDiffuse = diffuseTiltedMatrix.map(m => m[0]);
     const baseAlbedo = albedoTiltedMatrix.map(m => m[0]);
 
+    // 3. Volcar resultados estructurados al Estado central
     State.results = {
         base: { global: baseGlobal, direct: baseDirect, diffuse: baseDiffuse, albedo: baseAlbedo },
         tiltedMatrix: { global: globalTiltedMatrix, direct: directTiltedMatrix, diffuse: diffuseTiltedMatrix, albedo: albedoTiltedMatrix },
@@ -89,6 +101,7 @@ export function runSimulation() {
         };
     };
 
+    // 4. Resolver según el Modo de Estudio seleccionado en la UI
     switch (studyMode) {
         case 1:
             const optAnnual = Optimization.findOptimalAnnual(globalTiltedMatrix);
