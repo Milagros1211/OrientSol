@@ -144,53 +144,42 @@ export function runSimulation() {
             processAllGains(State.results.optimalSeasonal, seaGlob, seaDir, seaDif, seaAlb);
             break;
         case 3: // Seguimiento a un eje polar
-            // 1. Obtener referencias óptimas anual y estacional
-            const refAnnual = Optimization.findOptimalAnnual(globalTiltedMatrix);
-            const refSea = Optimization.findOptimalSeasonal(globalTiltedMatrix);
+        case 4: // Seguimiento a un eje azimutal
+        case 5: // Seguimiento a un eje horizontal
+        case 6: // Seguimiento a dos ejes
+        case 7: { // Estudio Comparativo Completo
+            // 1. Referencias Óptimas (Anual y Estacional)
+            const refAnn = Optimization.findOptimalAnnual(globalTiltedMatrix);
+            const refSeas = Optimization.findOptimalSeasonal(globalTiltedMatrix);
             
-            State.results.optimalAnnual.global = refAnnual.optimalMonthlyRadiation;
-            State.results.optimalAnnual.direct = directTiltedMatrix.map(m => m[refAnnual.optimalAngle]);
-            State.results.optimalAnnual.diffuse = diffuseTiltedMatrix.map(m => m[refAnnual.optimalAngle]);
-            State.results.optimalAnnual.albedo = albedoTiltedMatrix.map(m => m[refAnnual.optimalAngle]);
+            State.results.optimalAnnual.global = refAnn.optimalMonthlyRadiation;
+            State.results.optimalAnnual.direct = directTiltedMatrix.map(m => m[refAnn.optimalAngle]);
+            State.results.optimalAnnual.diffuse = diffuseTiltedMatrix.map(m => m[refAnn.optimalAngle]);
+            State.results.optimalAnnual.albedo = albedoTiltedMatrix.map(m => m[refAnn.optimalAngle]);
 
-            let sGlob = new Array(12).fill(0), sDir = new Array(12).fill(0), sDif = new Array(12).fill(0), sAlb = new Array(12).fill(0);
-            const seasonsList = [
+            let seasGlob = new Array(12).fill(0), seasDir = new Array(12).fill(0), seasDif = new Array(12).fill(0), seasAlb = new Array(12).fill(0);
+            const sList = [
                 { name: "Invierno", idxs: [11, 0, 1] }, { name: "Primavera", idxs: [2, 3, 4] },
                 { name: "Verano", idxs: [5, 6, 7] }, { name: "Otoño", idxs: [8, 9, 10] }
             ];
-            seasonsList.forEach(s => {
-                const a = refSea[s.name].angle;
+            sList.forEach(s => {
+                const a = refSeas[s.name].angle;
                 s.idxs.forEach(i => {
-                    sGlob[i] = globalTiltedMatrix[i][a];
-                    sDir[i] = directTiltedMatrix[i][a];
-                    sDif[i] = diffuseTiltedMatrix[i][a];
-                    sAlb[i] = albedoTiltedMatrix[i][a];
+                    seasGlob[i] = globalTiltedMatrix[i][a];
+                    seasDir[i] = directTiltedMatrix[i][a];
+                    seasDif[i] = diffuseTiltedMatrix[i][a];
+                    seasAlb[i] = albedoTiltedMatrix[i][a];
                 });
             });
-            State.results.optimalSeasonal = { global: sGlob, direct: sDir, diffuse: sDif, albedo: sAlb };
+            State.results.optimalSeasonal = { global: seasGlob, direct: seasDir, diffuse: seasDif, albedo: seasAlb };
 
-            // 2. Factores de seguimiento estándar
+            // 2. Calcular TODAS las cinemáticas de seguimiento para las tablas comparativas cruzadas
             processAllGains(State.results.polarAxis, baseGlobal.map(x=>x*1.25), baseDirect.map(x=>x*1.25), baseDiffuse.map(x=>x*1.25), baseAlbedo.map(x=>0));
             processAllGains(State.results.azimuthalAxis, baseGlobal.map(x=>x*1.28), baseDirect.map(x=>x*1.28), baseDiffuse.map(x=>x*1.28), baseAlbedo.map(x=>0));
             processAllGains(State.results.horizontalAxis, baseGlobal.map(x=>x*1.18), baseDirect.map(x=>x*1.18), baseDiffuse.map(x=>x*1.18), baseAlbedo.map(x=>0));
-            break;
-        case 4:
-            processAllGains(State.results.azimuthalAxis, baseGlobal.map(x=>x*1.28), baseDirect.map(x=>x*1.28), baseDiffuse.map(x=>x*1.28), baseAlbedo.map(x=>0));
-            break;
-        case 5:
-            processAllGains(State.results.horizontalAxis, baseGlobal.map(x=>x*1.18), baseDirect.map(x=>x*1.18), baseDiffuse.map(x=>x*1.18), baseAlbedo.map(x=>0));
-            break;
-        case 6:
             processAllGains(State.results.dualAxis, baseGlobal.map(x=>x*1.35), baseDirect.map(x=>x*1.35), baseDiffuse.map(x=>x*1.35), baseAlbedo.map(x=>0));
             break;
-        case 7:
-            const compAnnual = Optimization.findOptimalAnnual(globalTiltedMatrix);
-            const cAng = compAnnual.optimalAngle;
-            State.results.optimalAnnual.angle = cAng;
-            processAllGains(State.results.optimalAnnual, compAnnual.optimalMonthlyRadiation, directTiltedMatrix.map(m => m[cAng]), diffuseTiltedMatrix.map(m => m[cAng]), albedoTiltedMatrix.map(m => m[cAng]));
-            processAllGains(State.results.polarAxis, baseGlobal.map(x=>x*1.25), baseDirect.map(x=>x*1.25), baseDiffuse.map(x=>x*1.25), baseAlbedo.map(x=>0));
-            processAllGains(State.results.dualAxis, baseGlobal.map(x=>x*1.35), baseDirect.map(x=>x*1.35), baseDiffuse.map(x=>x*1.35), baseAlbedo.map(x=>0));
-            break;
+        }
         default:
             throw new Error("Modo de estudio no reconocido.");
     }

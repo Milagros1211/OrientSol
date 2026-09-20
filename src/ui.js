@@ -28,16 +28,21 @@ export function renderResultsTable() {
     const { ui, results, parameters, climateData } = State;
     const imgContainer = document.getElementById('studyImageContainer');
 
-    // Mostrar u ocultar la imagen según el estudio seleccionado
+    // Control dinámico de las imágenes según el tipo de seguimiento seleccionado
     if (parameters.studyMode === 3) {
         imgContainer.classList.remove('hidden');
-        imgContainer.innerHTML = `
-            <div class="flex flex-col items-center">
-                <!-- Se inyecta la imagen física solicitada -->
-                <img src="./assets/img/SeguimientoPolar.JPG" alt="Seguimiento a un eje polar" class="w-40 h-auto drop-shadow-md rounded">
-            </div>
-        `;
+        imgContainer.innerHTML = `<div class="flex flex-col items-center"><img src="./assets/img/SeguimientoPolar.jpg" alt="Seguimiento a un eje polar" class="w-40 h-auto drop-shadow-md rounded"></div>`;
+    } else if (parameters.studyMode === 4) {
+        imgContainer.classList.remove('hidden');
+        imgContainer.innerHTML = `<div class="flex flex-col items-center"><img src="./assets/img/SeguimientoAzimutal.jpg" alt="Seguimiento a un eje azimutal" class="w-40 h-auto drop-shadow-md rounded"></div>`;
+    } else if (parameters.studyMode === 5) {
+        imgContainer.classList.remove('hidden');
+        imgContainer.innerHTML = `<div class="flex flex-col items-center"><img src="./assets/img/SeguimientoHorizontal.jpg" alt="Seguimiento a un eje horizontal" class="w-40 h-auto drop-shadow-md rounded"></div>`;
+    } else if (parameters.studyMode === 6) {
+        imgContainer.classList.remove('hidden');
+        imgContainer.innerHTML = `<div class="flex flex-col items-center"><img src="./assets/img/SeguimientoDosEjes.jpg" alt="Seguimiento a dos ejes" class="w-40 h-auto drop-shadow-md rounded"></div>`;
     } else {
+        // Modos 1, 2 y 7 (Comparativa) no llevan imagen lateral
         imgContainer.classList.add('hidden');
         imgContainer.innerHTML = '';
     }
@@ -49,6 +54,14 @@ export function renderResultsTable() {
         Tables.renderSeasonalTable(results, parameters, climateData, ui, elements);
     } else if (parameters.studyMode === 3) {
         Tables.renderPolarTable(results, parameters, climateData, ui, elements);
+    } else if (parameters.studyMode === 4) {
+        Tables.renderAzimuthalTable(results, parameters, climateData, ui, elements);
+    } else if (parameters.studyMode === 5) {
+        Tables.renderHorizontalTable(results, parameters, climateData, ui, elements);
+    } else if (parameters.studyMode === 6) {
+        Tables.renderDualAxisTable(results, parameters, climateData, ui, elements);
+    } else if (parameters.studyMode === 7) {
+        Tables.renderComparativeTable(results, parameters, climateData, ui, elements); // <- LLamada a la Comparativa
     } else {
         Tables.renderStandardTable(results, parameters, ui, elements);
     }

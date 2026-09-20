@@ -257,10 +257,329 @@ export const Tables = {
         tbody.innerHTML = html;
     },
 
-/**
-     * Renderiza la tabla para el Modo 3: Seguimiento a un eje polar (Figura 5.2.93)
+    /**
+     * Renderiza la tabla para Seguimiento Polar (6 columnas de ganancias)
      */
     renderPolarTable(results, parameters, climateData, ui, elements) {
+        const months = ui.currentLang === 'en' ? monthsEn : monthsEs;
+        const comp = ui.activeComponent;
+        const px = { global: 'Gdm', direct: 'Bdm', diffuse: 'Ddm', albedo: 'Rdm' }[comp];
+        const tbody = elements.resultsTableBody;
+        const isAlbedo = comp === 'albedo';
+
+        const vBase = isAlbedo ? new Array(12).fill(0) : (results.base[comp] || []);
+        const vPolar = results.polarAxis[comp] || [];
+        const vOptAnnual = results.optimalAnnual[comp] || [];
+        const vOptSeasonal = results.optimalSeasonal[comp] || [];
+        const vAzim = results.azimuthalAxis[comp] || [];
+        const vHoriz = results.horizontalAxis[comp] || [];
+        const vDual = results.dualAxis[comp] || [];
+        const temperatures = climateData.monthlyTemperature || [];
+
+        tbody.previousElementSibling.innerHTML = `
+            <tr class="bg-blue-500 text-white text-[11px] text-center border-b border-white">
+                <th class="p-1 border border-white font-normal bg-white" rowspan="2"></th>
+                <th class="p-1 border border-white font-normal">${px} (0º)</th>
+                <th class="p-1 border border-white font-normal">${px}</th>
+                <th class="p-1 border border-white font-normal">Tª media</th>
+                <th class="p-1 border border-white font-normal bg-[#102A5B]" colspan="6">Ganancias (%)</th>
+            </tr>
+            <tr class="bg-blue-500 text-white text-[11px] text-center">
+                <th colspan="3" class="border border-white bg-transparent"></th>
+                <th class="p-1 border border-white bg-[#3B82F6] font-normal">Plano horizontal</th>
+                <th class="p-1 border border-white bg-[#3B82F6] font-normal">Inclinación ópt. anual</th>
+                <th class="p-1 border border-white bg-[#3B82F6] font-normal">Inclin. ópt. estacional</th>
+                <th class="p-1 border border-white bg-[#3B82F6] font-normal">Seg. a un eje azimutal</th>
+                <th class="p-1 border border-white bg-[#3B82F6] font-normal">Seg. a un eje horizontal</th>
+                <th class="p-1 border border-white bg-[#3B82F6] font-normal">Seg. a dos ejes</th>
+            </tr>
+        `;
+
+        let html = '';
+        let sums = { base:0, pol:0, temp:0, gHoriz:0, gAnn:0, gSea:0, gAzim:0, gHTrack:0, gDual:0 };
+
+        for (let i = 0; i < 12; i++) {
+            const b = vBase[i] || 0, pol = vPolar[i] || 0, temp = temperatures[i] || 0;
+            const ann = vOptAnnual[i] || 0, sea = vOptSeasonal[i] || 0, az = vAzim[i] || 0, hz = vHoriz[i] || 0, dl = vDual[i] || 0;
+
+            const gHoriz = (!isAlbedo && b > 0) ? ((pol / b) - 1) * 100 : 0;
+            const gAnn = (!isAlbedo && ann > 0) ? ((pol / ann) - 1) * 100 : 0;
+            const gSea = (!isAlbedo && sea > 0) ? ((pol / sea) - 1) * 100 : 0;
+            const gAzim = (!isAlbedo && az > 0) ? ((pol / az) - 1) * 100 : 0;
+            const gHTrack = (!isAlbedo && hz > 0) ? ((pol / hz) - 1) * 100 : 0;
+            const gDual = (!isAlbedo && dl > 0) ? ((pol / dl) - 1) * 100 : 0;
+
+            sums.base+=b; sums.pol+=pol; sums.temp+=temp; sums.gHoriz+=gHoriz; sums.gAnn+=gAnn; sums.gSea+=gSea; sums.gAzim+=gAzim; sums.gHTrack+=gHTrack; sums.gDual+=gDual;
+
+            html += `<tr class="text-center text-[11px] text-gray-700 bg-white hover:bg-blue-50">
+                <td class="p-1.5 border border-white bg-blue-500 text-white font-medium">${months[i]}</td>
+                <td class="p-1.5 border border-gray-200">${b.toFixed(2)}</td>
+                <td class="p-1.5 border border-gray-200 font-semibold text-blue-700">${pol.toFixed(2)}</td>
+                <td class="p-1.5 border border-gray-200">${temp.toFixed(1)}</td>
+                <td class="p-1.5 border border-gray-200">${isAlbedo ? '-' : gHoriz.toFixed(2)}</td>
+                <td class="p-1.5 border border-gray-200">${isAlbedo ? '-' : gAnn.toFixed(2)}</td>
+                <td class="p-1.5 border border-gray-200">${isAlbedo ? '-' : gSea.toFixed(2)}</td>
+                <td class="p-1.5 border border-gray-200">${isAlbedo ? '-' : gAzim.toFixed(2)}</td>
+                <td class="p-1.5 border border-gray-200">${isAlbedo ? '-' : gHTrack.toFixed(2)}</td>
+                <td class="p-1.5 border border-gray-200">${isAlbedo ? '-' : gDual.toFixed(2)}</td>
+            </tr>`;
+        }
+
+        html += `<tr class="text-center text-[11px] font-bold text-gray-800 bg-white">
+            <td class="p-1.5 border border-white bg-[#1E293B] text-white">MEDIA</td>
+            <td class="p-1.5 border border-gray-200">${(sums.base/12).toFixed(2)}</td>
+            <td class="p-1.5 border border-gray-200 text-blue-800">${(sums.pol/12).toFixed(2)}</td>
+            <td class="p-1.5 border border-gray-200">${(sums.temp/12).toFixed(1)}</td>
+            <td class="p-1.5 border border-gray-200">${isAlbedo ? '-' : (sums.gHoriz/12).toFixed(2)}</td>
+            <td class="p-1.5 border border-gray-200">${isAlbedo ? '-' : (sums.gAnn/12).toFixed(2)}</td>
+            <td class="p-1.5 border border-gray-200">${isAlbedo ? '-' : (sums.gSea/12).toFixed(2)}</td>
+            <td class="p-1.5 border border-gray-200">${isAlbedo ? '-' : (sums.gAzim/12).toFixed(2)}</td>
+            <td class="p-1.5 border border-gray-200">${isAlbedo ? '-' : (sums.gHTrack/12).toFixed(2)}</td>
+            <td class="p-1.5 border border-gray-200">${isAlbedo ? '-' : (sums.gDual/12).toFixed(2)}</td>
+        </tr>`;
+        tbody.innerHTML = html;
+    },
+
+    /**
+     * Renderiza la tabla para Seguimiento Azimutal (6 columnas de ganancias)
+     */
+    renderAzimuthalTable(results, parameters, climateData, ui, elements) {
+        const months = ui.currentLang === 'en' ? monthsEn : monthsEs;
+        const comp = ui.activeComponent;
+        const px = { global: 'Gdm', direct: 'Bdm', diffuse: 'Ddm', albedo: 'Rdm' }[comp];
+        const tbody = elements.resultsTableBody;
+        const isAlbedo = comp === 'albedo';
+
+        const vBase = isAlbedo ? new Array(12).fill(0) : (results.base[comp] || []);
+        const vAzim = results.azimuthalAxis[comp] || [];
+        const vOptAnnual = results.optimalAnnual[comp] || [];
+        const vOptSeasonal = results.optimalSeasonal[comp] || [];
+        const vPolar = results.polarAxis[comp] || [];
+        const vHoriz = results.horizontalAxis[comp] || [];
+        const vDual = results.dualAxis[comp] || [];
+        const temperatures = climateData.monthlyTemperature || [];
+
+        tbody.previousElementSibling.innerHTML = `
+            <tr class="bg-blue-500 text-white text-[11px] text-center border-b border-white">
+                <th class="p-1 border border-white font-normal bg-white" rowspan="2"></th>
+                <th class="p-1 border border-white font-normal">${px} (0º)</th>
+                <th class="p-1 border border-white font-normal">${px}</th>
+                <th class="p-1 border border-white font-normal">Tª media</th>
+                <th class="p-1 border border-white font-normal bg-[#102A5B]" colspan="6">Ganancias (%)</th>
+            </tr>
+            <tr class="bg-blue-500 text-white text-[11px] text-center">
+                <th colspan="3" class="border border-white bg-transparent"></th>
+                <th class="p-1 border border-white bg-[#3B82F6] font-normal">Plano horizontal</th>
+                <th class="p-1 border border-white bg-[#3B82F6] font-normal">Inclinación ópt. anual</th>
+                <th class="p-1 border border-white bg-[#3B82F6] font-normal">Inclin. ópt. estacional</th>
+                <th class="p-1 border border-white bg-[#3B82F6] font-normal">Seg. a un eje polar</th>
+                <th class="p-1 border border-white bg-[#3B82F6] font-normal">Seg. a un eje horizontal</th>
+                <th class="p-1 border border-white bg-[#3B82F6] font-normal">Seg. a dos ejes</th>
+            </tr>
+        `;
+
+        let html = '';
+        let sums = { base:0, azim:0, temp:0, gHoriz:0, gAnn:0, gSea:0, gPolar:0, gHTrack:0, gDual:0 };
+
+        for (let i = 0; i < 12; i++) {
+            const b = vBase[i] || 0, az = vAzim[i] || 0, temp = temperatures[i] || 0;
+            const ann = vOptAnnual[i] || 0, sea = vOptSeasonal[i] || 0, pol = vPolar[i] || 0, hz = vHoriz[i] || 0, dl = vDual[i] || 0;
+
+            const gHoriz = (!isAlbedo && b > 0) ? ((az / b) - 1) * 100 : 0;
+            const gAnn = (!isAlbedo && ann > 0) ? ((az / ann) - 1) * 100 : 0;
+            const gSea = (!isAlbedo && sea > 0) ? ((az / sea) - 1) * 100 : 0;
+            const gPolar = (!isAlbedo && pol > 0) ? ((az / pol) - 1) * 100 : 0;
+            const gHTrack = (!isAlbedo && hz > 0) ? ((az / hz) - 1) * 100 : 0;
+            const gDual = (!isAlbedo && dl > 0) ? ((az / dl) - 1) * 100 : 0;
+
+            sums.base+=b; sums.azim+=az; sums.temp+=temp; sums.gHoriz+=gHoriz; sums.gAnn+=gAnn; sums.gSea+=gSea; sums.gPolar+=gPolar; sums.gHTrack+=gHTrack; sums.gDual+=gDual;
+
+            html += `<tr class="text-center text-[11px] text-gray-700 bg-white hover:bg-blue-50">
+                <td class="p-1.5 border border-white bg-blue-500 text-white font-medium">${months[i]}</td>
+                <td class="p-1.5 border border-gray-200">${b.toFixed(2)}</td>
+                <td class="p-1.5 border border-gray-200 font-semibold text-blue-700">${az.toFixed(2)}</td>
+                <td class="p-1.5 border border-gray-200">${temp.toFixed(1)}</td>
+                <td class="p-1.5 border border-gray-200">${isAlbedo ? '-' : gHoriz.toFixed(2)}</td>
+                <td class="p-1.5 border border-gray-200">${isAlbedo ? '-' : gAnn.toFixed(2)}</td>
+                <td class="p-1.5 border border-gray-200">${isAlbedo ? '-' : gSea.toFixed(2)}</td>
+                <td class="p-1.5 border border-gray-200">${isAlbedo ? '-' : gPolar.toFixed(2)}</td>
+                <td class="p-1.5 border border-gray-200">${isAlbedo ? '-' : gHTrack.toFixed(2)}</td>
+                <td class="p-1.5 border border-gray-200">${isAlbedo ? '-' : gDual.toFixed(2)}</td>
+            </tr>`;
+        }
+
+        html += `<tr class="text-center text-[11px] font-bold text-gray-800 bg-white">
+            <td class="p-1.5 border border-white bg-[#1E293B] text-white">MEDIA</td>
+            <td class="p-1.5 border border-gray-200">${(sums.base/12).toFixed(2)}</td>
+            <td class="p-1.5 border border-gray-200 text-blue-800">${(sums.azim/12).toFixed(2)}</td>
+            <td class="p-1.5 border border-gray-200">${(sums.temp/12).toFixed(1)}</td>
+            <td class="p-1.5 border border-gray-200">${isAlbedo ? '-' : (sums.gHoriz/12).toFixed(2)}</td>
+            <td class="p-1.5 border border-gray-200">${isAlbedo ? '-' : (sums.gAnn/12).toFixed(2)}</td>
+            <td class="p-1.5 border border-gray-200">${isAlbedo ? '-' : (sums.gSea/12).toFixed(2)}</td>
+            <td class="p-1.5 border border-gray-200">${isAlbedo ? '-' : (sums.gPolar/12).toFixed(2)}</td>
+            <td class="p-1.5 border border-gray-200">${isAlbedo ? '-' : (sums.gHTrack/12).toFixed(2)}</td>
+            <td class="p-1.5 border border-gray-200">${isAlbedo ? '-' : (sums.gDual/12).toFixed(2)}</td>
+        </tr>`;
+        tbody.innerHTML = html;
+    },
+
+    /**
+     * Renderiza la tabla para Seguimiento Horizontal (6 columnas de ganancias)
+     */
+    renderHorizontalTable(results, parameters, climateData, ui, elements) {
+        const months = ui.currentLang === 'en' ? monthsEn : monthsEs;
+        const comp = ui.activeComponent;
+        const px = { global: 'Gdm', direct: 'Bdm', diffuse: 'Ddm', albedo: 'Rdm' }[comp];
+        const tbody = elements.resultsTableBody;
+        const isAlbedo = comp === 'albedo';
+
+        const vBase = isAlbedo ? new Array(12).fill(0) : (results.base[comp] || []);
+        const vHoriz = results.horizontalAxis[comp] || [];
+        const vOptAnnual = results.optimalAnnual[comp] || [];
+        const vOptSeasonal = results.optimalSeasonal[comp] || [];
+        const vPolar = results.polarAxis[comp] || [];
+        const vAzim = results.azimuthalAxis[comp] || [];
+        const vDual = results.dualAxis[comp] || [];
+        const temperatures = climateData.monthlyTemperature || [];
+
+        tbody.previousElementSibling.innerHTML = `
+            <tr class="bg-blue-500 text-white text-[11px] text-center border-b border-white">
+                <th class="p-1 border border-white font-normal bg-white" rowspan="2"></th>
+                <th class="p-1 border border-white font-normal">${px} (0º)</th>
+                <th class="p-1 border border-white font-normal">${px}</th>
+                <th class="p-1 border border-white font-normal">Tª media</th>
+                <th class="p-1 border border-white font-normal bg-[#102A5B]" colspan="6">Ganancias (%)</th>
+            </tr>
+            <tr class="bg-blue-500 text-white text-[11px] text-center">
+                <th colspan="3" class="border border-white bg-transparent"></th>
+                <th class="p-1 border border-white bg-[#3B82F6] font-normal">Plano horizontal</th>
+                <th class="p-1 border border-white bg-[#3B82F6] font-normal">Inclinación ópt. anual</th>
+                <th class="p-1 border border-white bg-[#3B82F6] font-normal">Inclin. ópt. estacional</th>
+                <th class="p-1 border border-white bg-[#3B82F6] font-normal">Seg. a un eje polar</th>
+                <th class="p-1 border border-white bg-[#3B82F6] font-normal">Seg. a un eje azimutal</th>
+                <th class="p-1 border border-white bg-[#3B82F6] font-normal">Seg. a dos ejes</th>
+            </tr>
+        `;
+
+        let html = '';
+        let sums = { base:0, hz:0, temp:0, gHoriz:0, gAnn:0, gSea:0, gPolar:0, gAzim:0, gDual:0 };
+
+        for (let i = 0; i < 12; i++) {
+            const b = vBase[i] || 0, hz = vHoriz[i] || 0, temp = temperatures[i] || 0;
+            const ann = vOptAnnual[i] || 0, sea = vOptSeasonal[i] || 0, pol = vPolar[i] || 0, az = vAzim[i] || 0, dl = vDual[i] || 0;
+
+            const gHoriz = (!isAlbedo && b > 0) ? ((hz / b) - 1) * 100 : 0;
+            const gAnn = (!isAlbedo && ann > 0) ? ((hz / ann) - 1) * 100 : 0;
+            const gSea = (!isAlbedo && sea > 0) ? ((hz / sea) - 1) * 100 : 0;
+            const gPolar = (!isAlbedo && pol > 0) ? ((hz / pol) - 1) * 100 : 0;
+            const gAzim = (!isAlbedo && az > 0) ? ((hz / az) - 1) * 100 : 0;
+            const gDual = (!isAlbedo && dl > 0) ? ((hz / dl) - 1) * 100 : 0;
+
+            sums.base+=b; sums.hz+=hz; sums.temp+=temp; sums.gHoriz+=gHoriz; sums.gAnn+=gAnn; sums.gSea+=gSea; sums.gPolar+=gPolar; sums.gAzim+=gAzim; sums.gDual+=gDual;
+
+            html += `<tr class="text-center text-[11px] text-gray-700 bg-white hover:bg-blue-50">
+                <td class="p-1.5 border border-white bg-blue-500 text-white font-medium">${months[i]}</td>
+                <td class="p-1.5 border border-gray-200">${b.toFixed(2)}</td>
+                <td class="p-1.5 border border-gray-200 font-semibold text-blue-700">${hz.toFixed(2)}</td>
+                <td class="p-1.5 border border-gray-200">${temp.toFixed(1)}</td>
+                <td class="p-1.5 border border-gray-200">${isAlbedo ? '-' : gHoriz.toFixed(2)}</td>
+                <td class="p-1.5 border border-gray-200">${isAlbedo ? '-' : gAnn.toFixed(2)}</td>
+                <td class="p-1.5 border border-gray-200">${isAlbedo ? '-' : gSea.toFixed(2)}</td>
+                <td class="p-1.5 border border-gray-200">${isAlbedo ? '-' : gPolar.toFixed(2)}</td>
+                <td class="p-1.5 border border-gray-200">${isAlbedo ? '-' : gAzim.toFixed(2)}</td>
+                <td class="p-1.5 border border-gray-200">${isAlbedo ? '-' : gDual.toFixed(2)}</td>
+            </tr>`;
+        }
+
+        html += `<tr class="text-center text-[11px] font-bold text-gray-800 bg-white">
+            <td class="p-1.5 border border-white bg-[#1E293B] text-white">MEDIA</td>
+            <td class="p-1.5 border border-gray-200">${(sums.base/12).toFixed(2)}</td>
+            <td class="p-1.5 border border-gray-200 text-blue-800">${(sums.hz/12).toFixed(2)}</td>
+            <td class="p-1.5 border border-gray-200">${(sums.temp/12).toFixed(1)}</td>
+            <td class="p-1.5 border border-gray-200">${isAlbedo ? '-' : (sums.gHoriz/12).toFixed(2)}</td>
+            <td class="p-1.5 border border-gray-200">${isAlbedo ? '-' : (sums.gAnn/12).toFixed(2)}</td>
+            <td class="p-1.5 border border-gray-200">${isAlbedo ? '-' : (sums.gSea/12).toFixed(2)}</td>
+            <td class="p-1.5 border border-gray-200">${isAlbedo ? '-' : (sums.gPolar/12).toFixed(2)}</td>
+            <td class="p-1.5 border border-gray-200">${isAlbedo ? '-' : (sums.gAzim/12).toFixed(2)}</td>
+            <td class="p-1.5 border border-gray-200">${isAlbedo ? '-' : (sums.gDual/12).toFixed(2)}</td>
+        </tr>`;
+        tbody.innerHTML = html;
+    },
+
+    /**
+     * Renderiza la tabla para el Modo 7: Comparativa de todos los tipos de estudios (Figura 6.3.20)
+     */
+    renderComparativeTable(results, parameters, climateData, ui, elements) {
+        const months = ui.currentLang === 'en' ? monthsEn : monthsEs;
+        const comp = ui.activeComponent;
+        const px = { global: 'Gdm', direct: 'Bdm', diffuse: 'Ddm', albedo: 'Rdm' }[comp];
+        const tbody = elements.resultsTableBody;
+        const isAlbedo = comp === 'albedo';
+
+        const vBase = isAlbedo ? new Array(12).fill(0) : (results.base[comp] || []);
+        const vAnn = results.optimalAnnual[comp] || [];
+        const vSea = results.optimalSeasonal[comp] || [];
+        const vPol = results.polarAxis[comp] || [];
+        const vAzi = results.azimuthalAxis[comp] || [];
+        const vHz = results.horizontalAxis[comp] || [];
+        const vDual = results.dualAxis[comp] || [];
+        const temperatures = climateData.monthlyTemperature || [];
+
+        // Cabecera basada en la Figura 6.3.20 (Valores absolutos)
+        tbody.previousElementSibling.innerHTML = `
+            <tr class="bg-blue-500 text-white text-[11px] text-center border-b border-white">
+                <th class="p-1.5 border border-white font-normal bg-white"></th>
+                <th class="p-1.5 border border-white font-normal">${px} (0º)</th>
+                <th class="p-1.5 border border-white font-normal">${px} (Inclinación ópt. anual)</th>
+                <th class="p-1.5 border border-white font-normal">${px} (Inclinación ópt. estacional)</th>
+                <th class="p-1.5 border border-white font-normal">${px} (Seguim. a un eje polar)</th>
+                <th class="p-1.5 border border-white font-normal">${px} (Seguim. a un eje azimutal)</th>
+                <th class="p-1.5 border border-white font-normal">${px} (Seguim. a un eje horizontal)</th>
+                <th class="p-1.5 border border-white font-normal">${px} (Seguim. a dos ejes)</th>
+                <th class="p-1.5 border border-white font-normal">Temperatura media</th>
+            </tr>
+        `;
+
+        let html = '';
+        let sums = { b:0, an:0, se:0, po:0, az:0, hz:0, du:0, t:0 };
+
+        for (let i = 0; i < 12; i++) {
+            const b = vBase[i] || 0, an = vAnn[i] || 0, se = vSea[i] || 0, po = vPol[i] || 0;
+            const az = vAzi[i] || 0, hz = vHz[i] || 0, du = vDual[i] || 0, t = temperatures[i] || 0;
+
+            sums.b+=b; sums.an+=an; sums.se+=se; sums.po+=po; sums.az+=az; sums.hz+=hz; sums.du+=du; sums.t+=t;
+
+            html += `<tr class="text-center text-[11px] text-gray-700 bg-white hover:bg-blue-50">
+                <td class="p-1.5 border border-white bg-blue-500 text-white font-medium">${months[i]}</td>
+                <td class="p-1.5 border border-gray-200">${b.toFixed(2)}</td>
+                <td class="p-1.5 border border-gray-200">${an.toFixed(2)}</td>
+                <td class="p-1.5 border border-gray-200">${se.toFixed(2)}</td>
+                <td class="p-1.5 border border-gray-200">${po.toFixed(2)}</td>
+                <td class="p-1.5 border border-gray-200">${az.toFixed(2)}</td>
+                <td class="p-1.5 border border-gray-200">${hz.toFixed(2)}</td>
+                <td class="p-1.5 border border-gray-200">${du.toFixed(2)}</td>
+                <td class="p-1.5 border border-gray-200">${t.toFixed(1)}</td>
+            </tr>`;
+        }
+
+        html += `<tr class="text-center text-[11px] font-bold text-gray-800 bg-white">
+            <td class="p-1.5 border border-white bg-[#1E293B] text-white">MEDIA</td>
+            <td class="p-1.5 border border-gray-200">${(sums.b/12).toFixed(2)}</td>
+            <td class="p-1.5 border border-gray-200">${(sums.an/12).toFixed(2)}</td>
+            <td class="p-1.5 border border-gray-200">${(sums.se/12).toFixed(2)}</td>
+            <td class="p-1.5 border border-gray-200">${(sums.po/12).toFixed(2)}</td>
+            <td class="p-1.5 border border-gray-200">${(sums.az/12).toFixed(2)}</td>
+            <td class="p-1.5 border border-gray-200">${(sums.hz/12).toFixed(2)}</td>
+            <td class="p-1.5 border border-gray-200">${(sums.du/12).toFixed(2)}</td>
+            <td class="p-1.5 border border-gray-200">${(sums.t/12).toFixed(1)}</td>
+        </tr>`;
+        tbody.innerHTML = html;
+    },
+
+    /**
+     * Renderiza la tabla para el Modo 6: Seguimiento a dos ejes (Figura 6.3.19)
+     */
+    renderDualAxisTable(results, parameters, climateData, ui, elements) {
         const monthsEs = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
         const monthsEn = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
         const months = ui.currentLang === 'en' ? monthsEn : monthsEs;
@@ -271,69 +590,73 @@ export const Tables = {
 
         const tbody = elements.resultsTableBody;
         const thead = tbody.previousElementSibling;
-
         const isAlbedo = comp === 'albedo';
 
         // Extraer vectores de datos desde el Estado
         const vBase = isAlbedo ? new Array(12).fill(0) : (results.base[comp] || []);
-        const vPolar = results.polarAxis[comp] || [];
+        const vDual = results.dualAxis[comp] || [];
         const vOptAnnual = results.optimalAnnual[comp] || [];
         const vOptSeasonal = results.optimalSeasonal[comp] || [];
+        const vPolar = results.polarAxis[comp] || [];
         const vAzim = results.azimuthalAxis[comp] || [];
         const vHoriz = results.horizontalAxis[comp] || [];
         const temperatures = climateData.monthlyTemperature || [];
 
-        // Cabecera basada en la Figura 5.2.93
+        // Cabecera basada en la Figura 6.3.19 (6 columnas de ganancias)
         thead.innerHTML = `
             <tr class="bg-blue-500 text-white text-[11px] text-center border-b border-white">
                 <th class="p-1 border border-white font-normal bg-white" rowspan="2"></th>
                 <th class="p-1 border border-white font-normal">${px} (0º)</th>
                 <th class="p-1 border border-white font-normal">${px}</th>
                 <th class="p-1 border border-white font-normal">Tª media</th>
-                <th class="p-1 border border-white font-normal bg-[#102A5B]" colspan="5">Ganancias (%)</th>
+                <th class="p-1 border border-white font-normal bg-[#102A5B]" colspan="6">Ganancias (%)</th>
             </tr>
             <tr class="bg-blue-500 text-white text-[11px] text-center">
                 <th colspan="3" class="border border-white bg-transparent"></th>
                 <th class="p-1 border border-white bg-[#3B82F6] font-normal">Plano horizontal</th>
                 <th class="p-1 border border-white bg-[#3B82F6] font-normal">Inclinación ópt. anual</th>
                 <th class="p-1 border border-white bg-[#3B82F6] font-normal">Inclin. ópt. estacional</th>
+                <th class="p-1 border border-white bg-[#3B82F6] font-normal">Seg. a un eje polar</th>
                 <th class="p-1 border border-white bg-[#3B82F6] font-normal">Seg. a un eje azimutal</th>
                 <th class="p-1 border border-white bg-[#3B82F6] font-normal">Seg. a un eje horizontal</th>
             </tr>
         `;
 
         let html = '';
-        let sums = { base: 0, polar: 0, temp: 0, gHoriz: 0, gAnnual: 0, gSea: 0, gAzim: 0, gHTrack: 0 };
+        let sums = { base: 0, dual: 0, temp: 0, gHoriz: 0, gAnnual: 0, gSea: 0, gPolar: 0, gAzim: 0, gHTrack: 0 };
 
         for (let i = 0; i < 12; i++) {
             const b = vBase[i] || 0;
-            const pol = vPolar[i] || 0;
+            const dl = vDual[i] || 0;
             const temp = temperatures[i] || 0;
             const ann = vOptAnnual[i] || 0;
             const sea = vOptSeasonal[i] || 0;
+            const pol = vPolar[i] || 0;
             const az = vAzim[i] || 0;
             const hz = vHoriz[i] || 0;
 
             // Fórmulas de ganancias relativas porcentuales
-            const gHoriz = (!isAlbedo && b > 0) ? ((pol / b) - 1) * 100 : 0;
-            const gAnnual = (!isAlbedo && ann > 0) ? ((pol / ann) - 1) * 100 : 0;
-            const gSea = (!isAlbedo && sea > 0) ? ((pol / sea) - 1) * 100 : 0;
-            const gAzim = (!isAlbedo && az > 0) ? ((pol / az) - 1) * 100 : 0;
-            const gHTrack = (!isAlbedo && hz > 0) ? ((pol / hz) - 1) * 100 : 0;
+            const gHoriz = (!isAlbedo && b > 0) ? ((dl / b) - 1) * 100 : 0;
+            const gAnnual = (!isAlbedo && ann > 0) ? ((dl / ann) - 1) * 100 : 0;
+            const gSea = (!isAlbedo && sea > 0) ? ((dl / sea) - 1) * 100 : 0;
+            const gPolar = (!isAlbedo && pol > 0) ? ((dl / pol) - 1) * 100 : 0;
+            const gAzim = (!isAlbedo && az > 0) ? ((dl / az) - 1) * 100 : 0;
+            const gHTrack = (!isAlbedo && hz > 0) ? ((dl / hz) - 1) * 100 : 0;
 
-            sums.base += b; sums.polar += pol; sums.temp += temp;
+            sums.base += b; sums.dual += dl; sums.temp += temp;
             sums.gHoriz += gHoriz; sums.gAnnual += gAnnual; sums.gSea += gSea;
-            sums.gAzim += gAzim; sums.gHTrack += gHTrack;
+            sums.gPolar += gPolar; sums.gAzim += gAzim; sums.gHTrack += gHTrack;
 
             html += `
                 <tr class="text-center text-[11px] text-gray-700 bg-white hover:bg-blue-50">
                     <td class="p-1.5 border border-white bg-blue-500 text-white font-medium">${months[i]}</td>
                     <td class="p-1.5 border border-gray-200">${b.toFixed(2)}</td>
-                    <td class="p-1.5 border border-gray-200 font-semibold text-blue-700">${pol.toFixed(2)}</td>
+                    <td class="p-1.5 border border-gray-200 font-semibold text-blue-700">${dl.toFixed(2)}</td>
                     <td class="p-1.5 border border-gray-200">${temp.toFixed(1)}</td>
                     <td class="p-1.5 border border-gray-200">${isAlbedo ? '-' : gHoriz.toFixed(2)}</td>
                     <td class="p-1.5 border border-gray-200">${isAlbedo ? '-' : gAnnual.toFixed(2)}</td>
                     <td class="p-1.5 border border-gray-200">${isAlbedo ? '-' : gSea.toFixed(2)}</td>
+                    <td class="p-1.5 border border-gray-200">${isAlbedo ? '-' : gPolar.toFixed(2)}</td>
                     <td class="p-1.5 border border-gray-200">${isAlbedo ? '-' : gAzim.toFixed(2)}</td>
                     <td class="p-1.5 border border-gray-200">${isAlbedo ? '-' : gHTrack.toFixed(2)}</td>
                 </tr>
@@ -344,11 +667,12 @@ export const Tables = {
             <tr class="text-center text-[11px] font-bold text-gray-800 bg-white">
                 <td class="p-1.5 border border-white bg-[#1E293B] text-white">MEDIA</td>
                 <td class="p-1.5 border border-gray-200">${(sums.base / 12).toFixed(2)}</td>
-                <td class="p-1.5 border border-gray-200 text-blue-800">${(sums.polar / 12).toFixed(2)}</td>
+                <td class="p-1.5 border border-gray-200 text-blue-800">${(sums.dual / 12).toFixed(2)}</td>
                 <td class="p-1.5 border border-gray-200">${(sums.temp / 12).toFixed(2)}</td>
                 <td class="p-1.5 border border-gray-200">${isAlbedo ? '-' : (sums.gHoriz / 12).toFixed(2)}</td>
                 <td class="p-1.5 border border-gray-200">${isAlbedo ? '-' : (sums.gAnnual / 12).toFixed(2)}</td>
                 <td class="p-1.5 border border-gray-200">${isAlbedo ? '-' : (sums.gSea / 12).toFixed(2)}</td>
+                <td class="p-1.5 border border-gray-200">${isAlbedo ? '-' : (sums.gPolar / 12).toFixed(2)}</td>
                 <td class="p-1.5 border border-gray-200">${isAlbedo ? '-' : (sums.gAzim / 12).toFixed(2)}</td>
                 <td class="p-1.5 border border-gray-200">${isAlbedo ? '-' : (sums.gHTrack / 12).toFixed(2)}</td>
             </tr>
