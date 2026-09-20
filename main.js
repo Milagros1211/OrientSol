@@ -4,8 +4,22 @@ const fs = require('fs');
 
 let mainWindow;
 
+// Obtener la ruta persistente del usuario en el sistema operativo
+const getUserDataPath = () => {
+    const userDataDir = app.getPath('userData');
+    const userCsvPath = path.join(userDataDir, 'BBDD_Mundo.csv');
+    
+    // Si el archivo no existe en el userData del usuario, copiarlo desde los recursos originales
+    if (!fs.existsSync(userCsvPath)) {
+        const defaultCsvPath = path.join(app.getAppPath(), 'input_data', 'BBDD_Mundo.csv');
+        if (fs.existsSync(defaultCsvPath)) {
+            fs.copyFileSync(defaultCsvPath, userCsvPath);
+        }
+    }
+    return userCsvPath;
+};
+
 function createWindow () {
-  // Configuración de la ventana nativa de Windows
   const mainWindow = new BrowserWindow({
     width: 1280,
     height: 800,
@@ -13,40 +27,44 @@ function createWindow () {
     minHeight: 768,
     icon: path.join(__dirname, 'assets/img/ujaen.png'),
     webPreferences: {
-      // Medidas de seguridad modernas
       nodeIntegration: false,
-      contextIsolation: true
+      contextIsolation: true,
+      preload: path.join(__dirname, 'preload.js') // Asegúrate de tener tu preload configurado
     }
   });
 
-  // Elimina la barra de menú superior (Archivo, Editar, Ver...) para que parezca un software nativo
   mainWindow.setMenuBarVisibility(false);
-
-  // Carga el HTML principal de tu aplicación
   mainWindow.loadFile('index.html');
 }
 
-// Cuando Electron esté listo, abre la ventana
 app.whenReady().then(() => {
   createWindow();
-
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
   });
 });
 
-// Cierra el proceso cuando el usuario cierra todas las ventanas
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();
 });
 
-// Canal IPC para escribir físicamente en BBDD_Mundo.csv
+// 1. Canal IPC para LEER el CSV persistente del usuario
+ipcMain.handle('get-csv-data', async () => {
+    try {
+        const filePath = getUserDataPath();
+        return fs.readFileSync(filePath, 'utf-8');
+    } catch (error) {
+        console.error("Error al leer BBDD_Mundo.csv:", error);
+        return "";
+    }
+});
+
+// 2. Canal IPC para ESCRIBIR y añadir filas de manera persistente
 ipcMain.handle('append-csv-row', async (event, rowString) => {
     try {
-        const filePath = path.join(__dirname, 'input_data', 'BBDD_Mundo.csv');
-        // Añade un salto de línea y la nueva fila al final del archivo CSV
+        const filePath = getUserDataPath();
         fs.appendFileSync(filePath, '\n' + rowString, 'utf-8');
-        console.log("Archivo BBDD_Mundo.csv actualizado correctamente en disco.");
+        console.log("BBDD_Mundo.csv actualizado de forma persistente en:", filePath);
         return true;
     } catch (error) {
         console.error("Error al escribir en BBDD_Mundo.csv:", error);

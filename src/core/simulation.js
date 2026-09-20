@@ -127,6 +127,9 @@ export function runSimulation() {
             
             seasons.forEach(season => {
                 const ang = optSea[season.name].angle;
+                // GUARDAR LOS ÁNGULOS EN EL ESTADO PARA LA TABLA
+                State.results.optimalSeasonal[`angle_${season.name}`] = ang;
+                
                 season.idxs.forEach(mIdx => {
                     seaGlob[mIdx] = globalTiltedMatrix[mIdx][ang];
                     seaDir[mIdx] = directTiltedMatrix[mIdx][ang];
@@ -134,10 +137,42 @@ export function runSimulation() {
                     seaAlb[mIdx] = albedoTiltedMatrix[mIdx][ang];
                 });
             });
+            // Necesitamos asegurarnos de tener calculado el óptimo anual para la 2ª columna de ganancias
+            const optAnnualRef = Optimization.findOptimalAnnual(globalTiltedMatrix);
+            State.results.optimalAnnual.global = optAnnualRef.optimalMonthlyRadiation;
+            
             processAllGains(State.results.optimalSeasonal, seaGlob, seaDir, seaDif, seaAlb);
             break;
-        case 3:
+        case 3: // Seguimiento a un eje polar
+            // 1. Obtener referencias óptimas anual y estacional
+            const refAnnual = Optimization.findOptimalAnnual(globalTiltedMatrix);
+            const refSea = Optimization.findOptimalSeasonal(globalTiltedMatrix);
+            
+            State.results.optimalAnnual.global = refAnnual.optimalMonthlyRadiation;
+            State.results.optimalAnnual.direct = directTiltedMatrix.map(m => m[refAnnual.optimalAngle]);
+            State.results.optimalAnnual.diffuse = diffuseTiltedMatrix.map(m => m[refAnnual.optimalAngle]);
+            State.results.optimalAnnual.albedo = albedoTiltedMatrix.map(m => m[refAnnual.optimalAngle]);
+
+            let sGlob = new Array(12).fill(0), sDir = new Array(12).fill(0), sDif = new Array(12).fill(0), sAlb = new Array(12).fill(0);
+            const seasonsList = [
+                { name: "Invierno", idxs: [11, 0, 1] }, { name: "Primavera", idxs: [2, 3, 4] },
+                { name: "Verano", idxs: [5, 6, 7] }, { name: "Otoño", idxs: [8, 9, 10] }
+            ];
+            seasonsList.forEach(s => {
+                const a = refSea[s.name].angle;
+                s.idxs.forEach(i => {
+                    sGlob[i] = globalTiltedMatrix[i][a];
+                    sDir[i] = directTiltedMatrix[i][a];
+                    sDif[i] = diffuseTiltedMatrix[i][a];
+                    sAlb[i] = albedoTiltedMatrix[i][a];
+                });
+            });
+            State.results.optimalSeasonal = { global: sGlob, direct: sDir, diffuse: sDif, albedo: sAlb };
+
+            // 2. Factores de seguimiento estándar
             processAllGains(State.results.polarAxis, baseGlobal.map(x=>x*1.25), baseDirect.map(x=>x*1.25), baseDiffuse.map(x=>x*1.25), baseAlbedo.map(x=>0));
+            processAllGains(State.results.azimuthalAxis, baseGlobal.map(x=>x*1.28), baseDirect.map(x=>x*1.28), baseDiffuse.map(x=>x*1.28), baseAlbedo.map(x=>0));
+            processAllGains(State.results.horizontalAxis, baseGlobal.map(x=>x*1.18), baseDirect.map(x=>x*1.18), baseDiffuse.map(x=>x*1.18), baseAlbedo.map(x=>0));
             break;
         case 4:
             processAllGains(State.results.azimuthalAxis, baseGlobal.map(x=>x*1.28), baseDirect.map(x=>x*1.28), baseDiffuse.map(x=>x*1.28), baseAlbedo.map(x=>0));

@@ -26,10 +26,29 @@ export function syncInputsToState() {
 
 export function renderResultsTable() {
     const { ui, results, parameters, climateData } = State;
+    const imgContainer = document.getElementById('studyImageContainer');
 
-    // Delegación limpia según el estudio seleccionado
+    // Mostrar u ocultar la imagen según el estudio seleccionado
+    if (parameters.studyMode === 3) {
+        imgContainer.classList.remove('hidden');
+        imgContainer.innerHTML = `
+            <div class="flex flex-col items-center">
+                <!-- Se inyecta la imagen física solicitada -->
+                <img src="./assets/img/SeguimientoPolar.JPG" alt="Seguimiento a un eje polar" class="w-40 h-auto drop-shadow-md rounded">
+            </div>
+        `;
+    } else {
+        imgContainer.classList.add('hidden');
+        imgContainer.innerHTML = '';
+    }
+
+    // Delegación del renderizado a la tabla correspondiente
     if (parameters.studyMode === 1) {
         Tables.renderAnnualTable(results, parameters, climateData, ui, elements);
+    } else if (parameters.studyMode === 2) {
+        Tables.renderSeasonalTable(results, parameters, climateData, ui, elements);
+    } else if (parameters.studyMode === 3) {
+        Tables.renderPolarTable(results, parameters, climateData, ui, elements);
     } else {
         Tables.renderStandardTable(results, parameters, ui, elements);
     }

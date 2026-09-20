@@ -8,34 +8,38 @@ import { showAlert } from './ui.js'
 // 1. Carga de la Base de Datos Predeterminada (Offline / Contingencia)
 export async function loadDefaultDatabase() {
     try {
+        let csvText = "";
 
-        const response = await fetch('./input_data/BBDD_Mundo.csv'); 
+        // Si estamos en Electron, leemos el archivo persistente del usuario
+        if (window.electronAPI && window.electronAPI.getCsvData) {
+            csvText = await window.electronAPI.getCsvData();
+        } else {
+            // Fallback para navegador web en desarrollo
+            const response = await fetch('./input_data/BBDD_Mundo.csv');
+            if (!response.ok) throw new Error("Archivo de base de datos no encontrado.");
+            csvText = await response.text();
+        }
         
-        if (!response.ok) throw new Error("Archivo de base de datos no encontrado.");
-        
-        const csvText = await response.text();
         const rows = csvText.split('\n');
         const citySelector = document.getElementById('citySelector');
+        citySelector.innerHTML = '<option value="">-- Seleccionar Ciudad --</option>'; // Limpiar duplicados al recargar
         
-        // Iteramos omitiendo la cabecera
-        rows.slice(1).forEach((row, index) => {
+        rows.slice(1).forEach((row) => {
             if (!row.trim()) return;
             const cols = row.split(',');
             
-            // Creamos las opciones dinámicamente en el select de la UI
             const option = document.createElement('option');
             option.value = JSON.stringify({
                 name: cols[0],
                 lat: parseFloat(cols[1]),
                 lon: parseFloat(cols[2]),
-                radiation: cols.slice(3, 15).map(Number), // Meses 1 a 12
-                temperature: cols.slice(15, 27).map(Number) // Temperaturas
+                radiation: cols.slice(3, 15).map(Number),
+                temperature: cols.slice(15, 27).map(Number)
             });
             option.textContent = cols[0];
             citySelector.appendChild(option);
         });
 
-        // Evento: Al seleccionar ciudad, inyectar en el Estado
         citySelector.addEventListener('change', (e) => {
             if (!e.target.value) return;
             const data = JSON.parse(e.target.value);
