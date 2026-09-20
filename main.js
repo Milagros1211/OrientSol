@@ -1,5 +1,8 @@
-const { app, BrowserWindow } = require('electron');
+const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
+const fs = require('fs');
+
+let mainWindow;
 
 function createWindow () {
   // Configuración de la ventana nativa de Windows
@@ -35,4 +38,18 @@ app.whenReady().then(() => {
 // Cierra el proceso cuando el usuario cierra todas las ventanas
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();
+});
+
+// Canal IPC para escribir físicamente en BBDD_Mundo.csv
+ipcMain.handle('append-csv-row', async (event, rowString) => {
+    try {
+        const filePath = path.join(__dirname, 'input_data', 'BBDD_Mundo.csv');
+        // Añade un salto de línea y la nueva fila al final del archivo CSV
+        fs.appendFileSync(filePath, '\n' + rowString, 'utf-8');
+        console.log("Archivo BBDD_Mundo.csv actualizado correctamente en disco.");
+        return true;
+    } catch (error) {
+        console.error("Error al escribir en BBDD_Mundo.csv:", error);
+        return false;
+    }
 });

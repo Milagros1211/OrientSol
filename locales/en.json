@@ -20,6 +20,7 @@
   "btnOpenEnergy": "Energy Analysis",
   "btnExportCsv": "Export to Excel (.CSV)",
   "btnExportPdf": "Generate PDF Report",
+  "btnOpenNewLocation": "New Location (Offline)",
   "studies": {
     "1": "Fixed annual inclination",
     "2": "Fixed seasonal inclination",

@@ -10,11 +10,13 @@ import { updateCharts } from './charts.js';
 import { exportToCSV, generatePDF } from './export.js';
 import { loadLanguage, updateUIWithLanguage } from '../locales/i18n.js';
 import { initEnergyModal } from './ui/energyModal.js'; // Importación del nuevo módulo
+import { initLocationModal } from './ui/locationModal.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
     
     // 1. Cargar base de datos predeterminada y diccionario de idioma
     await loadDefaultDatabase();
+    initLocationModal(); // <- Inicializa el modal de nueva localización manual
     State.ui.dict = await loadLanguage(State.ui.currentLang || 'es');
     
     if (State.ui.dict) {

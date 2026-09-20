@@ -26,11 +26,14 @@
         <section class="bg-white p-5 rounded-lg shadow-md lg:col-span-1">
             <h2 data-i18n="panelInputTitle" class="text-lg font-bold mb-4 border-b pb-2 text-blue-900">1. Entrada de Parámetros</h2>
             
-            <div class="mb-4 bg-gray-50 p-3 rounded border">
+            <div class="mb-4 bg-gray-50 p-3 rounded border space-y-2">
                 <label data-i18n="defaultDbLabel" class="block text-sm font-semibold mb-1" id="lblCity">Base de Datos Predeterminada</label>
                 <select id="citySelector" class="w-full border p-2 rounded text-sm bg-white">
                     <option value="">-- Seleccionar Ciudad --</option>
                 </select>
+                <button data-i18n="btnOpenNewLocation" id="btnOpenNewLocation" class="w-full bg-gray-600 hover:bg-gray-700 transition text-white p-2 rounded text-sm font-semibold shadow mt-2">
+                    + Nueva Localización (Manual)
+                </button>
             </div>
 
             <div class="grid grid-cols-2 gap-3 mb-4">
