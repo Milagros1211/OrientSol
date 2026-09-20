@@ -4,7 +4,8 @@
 // ==========================================
 
 export const State = {
-    // 1. Parámetros de Entrada del Usuario
+    // 1. Parámetros de Entrada del Usuario (Valores iniciales por defecto)
+    // Estos valores son sobrescritos por ui.js leyendo el HTML al pulsar "Calcular"
     location: {
         name: "Ubicación Desconocida",
         latitude: null,
@@ -25,28 +26,35 @@ export const State = {
     // 3. Resultados de la Simulación Matemática
     results: {
         base: { // Plano horizontal (0º)
-            global: [], direct: [], diffuse: [], albedo: []
+            global: [], direct: [], diffuse: [], albedo: [], energy: []
         },
-        tiltedMatrix: { 
+        tiltedMatrix: { // Matriz completa de 0º a 90º (Necesaria para pintar la tabla de MATLAB)
             global: [], direct: [], diffuse: [], albedo: [] 
-        }, // <--- NUEVO: Matriz completa de 0º a 90º
+        }, 
         optimalAnnual: {
             angle: 0,
-            global: [], direct: [], diffuse: [], albedo: [],
-            gains: { global: [], direct: [], diffuse: [], albedo: [] }
+            global: [], direct: [], diffuse: [], albedo: [], energy: [],
+            gains: { global: [], direct: [], diffuse: [], albedo: [], energy: [] }
         },
-        // (Se añaden estructuras similares para seasonal, polar, azimuthal, horizontal, dualAxis)
+        optimalSeasonal: {},
+        polarAxis: {},
+        azimuthalAxis: {},
+        horizontalAxis: {},
+        dualAxis: {}
     },
 
     // 4. Estado de la Interfaz
     ui: {
-        activeComponent: 'global' // Opciones: 'global', 'direct', 'diffuse', 'albedo'
+        activeComponent: 'global', // Opciones: 'global', 'direct', 'diffuse', 'albedo'
+        currentLang: 'es'
     },
 
     // Método para limpiar resultados previos antes de una nueva simulación
+    // ES VITAL QUE tiltedMatrix ESTÉ AQUÍ PARA EVITAR EL ERROR DE RESOLUCIÓN MATRICIAL
     resetResults() {
         this.results = { 
-            base: {}, 
+            base: { global: [], direct: [], diffuse: [], albedo: [], energy: [] }, 
+            tiltedMatrix: { global: [], direct: [], diffuse: [], albedo: [] }, 
             optimalAnnual: {}, 
             optimalSeasonal: {},
             polarAxis: {},

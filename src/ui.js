@@ -28,7 +28,7 @@ export function renderResultsTable() {
     const months = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
     
     const tbody = elements.resultsTableBody;
-    const thead = tbody.previousElementSibling; // Capturamos el thead para reconstruirlo
+    const thead = tbody.previousElementSibling;
 
     const studyKeys = {
         1: 'optimalAnnual', 2: 'optimalSeasonal', 3: 'polarAxis',
@@ -38,6 +38,10 @@ export function renderResultsTable() {
     const activeKey = studyKeys[parameters.studyMode];
     const studyObj = results[activeKey];
     const comp = ui.activeComponent;
+
+    // Prefijos dinámicos para la cabecera (Global=Gdm, Directa=Bdm, Difusa=Ddm, Albedo=Rdm)
+    const prefixes = { global: 'Gdm', direct: 'Bdm', diffuse: 'Ddm', albedo: 'Rdm' };
+    const px = prefixes[comp];
 
     if (!studyObj || !studyObj[comp] || studyObj[comp].length === 0) {
         tbody.innerHTML = '<tr><td colspan="12" class="text-center p-4 text-gray-500">No hay datos. Ejecute la simulación.</td></tr>';
@@ -52,26 +56,26 @@ export function renderResultsTable() {
     let html = '';
 
     // ==========================================
-    // RENDERIZADO IDÉNTICO A MATLAB: MODO 1 (Óptimo Anual)
+    // RENDERIZADO MODO 1: ÓPTIMO ANUAL (MATLAB Clone)
     // ==========================================
     if (parameters.studyMode === 1) {
         let matrix = results.tiltedMatrix[comp];
         let optimalAngle = studyObj.angle !== undefined ? studyObj.angle : '-';
 
-        // Reconstruir la cabecera idéntica a MATLAB
+        // Reconstrucción del Thead idéntico al original
         thead.innerHTML = `
             <tr class="bg-blue-500 text-white text-xs text-center border-b border-white">
                 <th class="p-2 border border-white font-normal w-24 bg-transparent"></th>
-                <th class="p-2 border border-white font-normal">Gdm (0º)</th>
-                <th class="p-2 border border-white font-normal">Gdm (15º)</th>
-                <th class="p-2 border border-white font-normal">Gdm (30º)</th>
-                <th class="p-2 border border-white font-normal">Gdm (45º)</th>
-                <th class="p-2 border border-white font-normal">Gdm (60º)</th>
-                <th class="p-2 border border-white font-normal">Gdm (75º)</th>
-                <th class="p-2 border border-white font-normal">Gdm (90º)</th>
+                <th class="p-2 border border-white font-normal">${px} (0º)</th>
+                <th class="p-2 border border-white font-normal">${px} (15º)</th>
+                <th class="p-2 border border-white font-normal">${px} (30º)</th>
+                <th class="p-2 border border-white font-normal">${px} (45º)</th>
+                <th class="p-2 border border-white font-normal">${px} (60º)</th>
+                <th class="p-2 border border-white font-normal">${px} (75º)</th>
+                <th class="p-2 border border-white font-normal">${px} (90º)</th>
                 <th class="p-2 border border-white font-bold bg-blue-600 flex flex-col justify-center items-center">
-                    <span class="text-[10px] text-blue-200">${optimalAngle}º</span>
-                    <span>Gdm óptimo</span>
+                    <span class="text-[11px] text-blue-200 leading-none">${optimalAngle}º</span>
+                    <span>${px} óptimo</span>
                 </th>
                 <th class="p-2 border border-white font-normal">Tª media</th>
                 <th class="p-1 border border-white bg-[#102A5B] font-normal" colspan="2">Ganancia</th>
@@ -83,11 +87,11 @@ export function renderResultsTable() {
             </tr>
         `;
 
-        // Generar filas
         let sumBase=0, sumOpt=0, sumTemp=0;
 
         for (let i = 0; i < 12; i++) {
-            let v0 = matrix && matrix[i] ? matrix[i][0] : 0;
+            // Extracción segura de la matriz transpuesta
+            let v0 = comp === 'albedo' ? 0 : (matrix && matrix[i] ? matrix[i][0] : 0);
             let v15 = matrix && matrix[i] ? matrix[i][15] : 0;
             let v30 = matrix && matrix[i] ? matrix[i][30] : 0;
             let v45 = matrix && matrix[i] ? matrix[i][45] : 0;
@@ -98,7 +102,6 @@ export function renderResultsTable() {
             let vOpt = studyData[i] || 0;
             let temp = temperatures[i] || 0;
             
-            // Factor = (Óptimo / Base)
             let factor = v0 > 0 ? (vOpt / v0).toFixed(2) : '-';
             let gainPct = gainsPercentages && gainsPercentages[i] !== null ? gainsPercentages[i].toFixed(2) : '-';
 
@@ -122,7 +125,7 @@ export function renderResultsTable() {
             `;
         }
 
-        // Fila de MEDIAS
+        // Fila de MEDIAS (Cálculo robusto contra indeterminaciones)
         let avgBase = sumBase / 12;
         let avgOpt = sumOpt / 12;
         let avgTemp = sumTemp / 12;
@@ -147,7 +150,7 @@ export function renderResultsTable() {
         `;
     } else {
         // ==========================================
-        // RENDERIZADO PARA LOS DEMÁS ESTUDIOS (Seguidores, etc.)
+        // RENDERIZADO PARA LOS DEMÁS ESTUDIOS
         // ==========================================
         thead.innerHTML = `
             <tr class="bg-gray-800 text-white text-xs">
