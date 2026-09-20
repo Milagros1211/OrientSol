@@ -1,0 +1,68 @@
+<!-- Archivo: assets/templates/energy-modal.html -->
+<div id="energyModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white rounded-lg shadow-xl w-11/12 max-w-5xl flex overflow-hidden">
+        <!-- Panel Izquierdo Modal -->
+        <div class="w-1/3 bg-blue-50 p-6 border-r border-blue-200 flex flex-col gap-4">
+            <div class="bg-blue-200 text-blue-800 font-semibold p-2 text-center rounded">Introduzca los valores y pulse Calcular</div>
+            <div>
+                <label class="block text-sm text-gray-700 font-semibold">Potencia pico instalada (kWp):</label>
+                <input type="number" id="kwpInput" value="10" class="w-full border p-2 rounded mt-1">
+            </div>
+            <div class="border-t border-blue-300 pt-4 mt-2">
+                <label class="block text-sm font-bold text-orange-500 mb-3">Para tecnología de silicio monocristalino</label>
+                <div class="flex items-center justify-between mb-3">
+                    <label class="text-sm font-semibold">γ (1/ºC):</label>
+                    <input type="number" id="gammaInput" value="-0.0035" step="0.0001" class="w-24 border p-1 rounded text-right">
+                </div>
+                <div class="flex items-center justify-between">
+                    <label class="text-sm font-semibold">TONC (ºC):</label>
+                    <input type="number" id="toncModalInput" value="47" class="w-24 border p-1 rounded text-right">
+                </div>
+            </div>
+            <div class="mt-auto">
+                <div class="flex justify-between items-center mb-2">
+                    <span class="text-xs text-blue-600">Método implementado: Osterwald</span>
+                    <button class="bg-gray-300 text-xs px-2 py-1 rounded hover:bg-gray-400">Información</button>
+                </div>
+                <button id="btnCalcEnergy" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded shadow">Calcular</button>
+            </div>
+            <div class="flex gap-2 mt-2">
+                <button id="btnCloseEnergy" class="flex-1 bg-gray-200 border p-2 rounded text-sm hover:bg-gray-300">Volver</button>
+                <button id="btnExitEnergy" class="flex-1 bg-gray-200 border p-2 rounded text-sm hover:bg-gray-300">Salir</button>
+            </div>
+        </div>
+        <!-- Panel Derecho Modal -->
+        <div class="w-2/3 p-6 flex flex-col">
+            <div class="flex justify-between border-b pb-2 mb-4">
+                <div class="text-sm"><span class="font-bold">Ciudad:</span> <span id="energyCity" class="text-blue-600">--</span></div>
+                <div class="text-sm"><span class="font-bold">Latitud (°):</span> <span id="energyLat" class="text-blue-600">--</span></div>
+            </div>
+            <h3 class="text-gray-600 font-semibold mb-2">Energía media mensual (kWh)</h3>
+            <table class="w-full text-sm border-collapse text-center">
+                <thead>
+                    <tr class="bg-blue-500 text-white">
+                        <th class="border p-2 bg-blue-600">Mes</th>
+                        <th class="border p-2">Superficie horizontal</th>
+                        <th class="border p-2">Estudio realizado</th>
+                        <th class="border p-2 bg-red-900">Ganancia (kWh)</th>
+                    </tr>
+                </thead>
+                <tbody id="energyTableBody">
+                    <tr><td colspan="4" class="p-6 text-gray-500">Pulse calcular para estimar la energía.</td></tr>
+                </tbody>
+                <tfoot id="energyTableFoot" class="font-bold bg-blue-900 text-white hidden">
+                    <tr>
+                        <td class="p-2 border">ANUAL</td>
+                        <td id="baseAnnualEnergy" class="p-2 border bg-white text-black"></td>
+                        <td id="studyAnnualEnergy" class="p-2 border bg-white text-black"></td>
+                        <td id="gainAnnualEnergy" class="p-2 border bg-white text-black"></td>
+                    </tr>
+                </tfoot>
+            </table>
+            <div class="mt-auto flex justify-end gap-3 pt-4">
+                <button id="btnExportEnergyCSV" class="bg-gray-200 hover:bg-gray-300 transition border px-4 py-2 rounded text-sm font-semibold">Exportar a Excel</button>
+                <button id="btnExportEnergyPDF" class="bg-gray-200 hover:bg-gray-300 transition border px-4 py-2 rounded text-sm font-semibold">Generar un informe</button>
+            </div>
+        </div>
+    </div>
+</div>

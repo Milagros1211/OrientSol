@@ -17,6 +17,7 @@
   "tableStudy": "Estudio Seleccionado",
   "tableGain": "Ganancia (%)",
   "emptyTableMsg": "Introduzca los parámetros y ejecute la simulación para visualizar los resultados.",
+  "btnOpenEnergy": "Cálculo de energía",
   "btnExportCsv": "Exportar a Excel (.CSV)",
   "btnExportPdf": "Generar Informe PDF",
   "studies": {
