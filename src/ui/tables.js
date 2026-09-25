@@ -32,19 +32,19 @@ export const Tables = {
 
         thead.innerHTML = `
             <tr class="bg-blue-500 text-white text-xs text-center border-b border-white">
-                <th class="p-2 border border-white font-normal w-24 bg-white"></th>
-                <th class="p-2 border border-white font-normal">${px} (0º)</th>
-                <th class="p-2 border border-white font-normal">${px} (15º)</th>
-                <th class="p-2 border border-white font-normal">${px} (30º)</th>
-                <th class="p-2 border border-white font-normal">${px} (45º)</th>
-                <th class="p-2 border border-white font-normal">${px} (60º)</th>
-                <th class="p-2 border border-white font-normal">${px} (75º)</th>
-                <th class="p-2 border border-white font-normal">${px} (90º)</th>
+                <th class="p-2 bg-blue-400 border border-white font-normal w-24 bg-white"></th>
+                <th class="p-2 bg-blue-400 border border-white font-normal">${px} (0º)</th>
+                <th class="p-2 bg-blue-400 border border-white font-normal">${px} (15º)</th>
+                <th class="p-2 bg-blue-400 border border-white font-normal">${px} (30º)</th>
+                <th class="p-2 bg-blue-400 border border-white font-normal">${px} (45º)</th>
+                <th class="p-2 bg-blue-400 border border-white font-normal">${px} (60º)</th>
+                <th class="p-2 bg-blue-400 border border-white font-normal">${px} (75º)</th>
+                <th class="p-2 bg-blue-400 border border-white font-normal">${px} (90º)</th>
                 <th class="p-2 border border-white font-bold bg-blue-600 flex flex-col justify-center items-center">
                     <span class="text-[11px] text-blue-200 leading-none">${optimalAngle}º</span>
                     <span>${px} óptimo</span>
                 </th>
-                <th class="p-2 border border-white font-normal">Tª media</th>
+                <th class="p-2 bg-blue-400 border border-white font-normal">Tª media</th>
                 <th class="p-1 border border-white bg-[#102A5B] font-normal" colspan="2">${t.tableGain || 'Ganancia'}</th>
             </tr>
             <tr class="bg-blue-500 text-white text-xs text-center">
@@ -146,17 +146,17 @@ export const Tables = {
         // 1. Renderizar Cabecera
         thead.innerHTML = `
             <tr class="bg-blue-500 text-white text-[11px] text-center border-b border-white">
-                <th class="p-1 border border-white font-normal bg-white" rowspan="2"></th>
-                <th class="p-1 border border-white font-normal">${px} (0º)</th>
-                <th class="p-1 border border-white font-normal">${px} (15º)</th>
-                <th class="p-1 border border-white font-normal">${px} (30º)</th>
-                <th class="p-1 border border-white font-normal">${px} (45º)</th>
-                <th class="p-1 border border-white font-normal">${px} (60º)</th>
-                <th class="p-1 border border-white font-normal">${px} (75º)</th>
-                <th class="p-1 border border-white font-normal">${px} (90º)</th>
-                <th class="p-1 border border-white font-normal bg-[#5C85D6] w-16">Ángulos óptimos (º)</th>
-                <th class="p-1 border border-white font-normal bg-[#5C85D6]">${px} óptimo</th>
-                <th class="p-1 border border-white font-normal bg-[#102A5B]" colspan="2">Ganancias (%)</th>
+                <th class="p-1 bg-blue-400 border border-white font-normal bg-white" rowspan="2"></th>
+                <th class="p-1 bg-blue-400 border border-white font-normal">${px} (0º)</th>
+                <th class="p-1 bg-blue-400 border border-white font-normal">${px} (15º)</th>
+                <th class="p-1 bg-blue-400 border border-white font-normal">${px} (30º)</th>
+                <th class="p-1 bg-blue-400 border border-white font-normal">${px} (45º)</th>
+                <th class="p-1 bg-blue-400 border border-white font-normal">${px} (60º)</th>
+                <th class="p-1 bg-blue-400 border border-white font-normal">${px} (75º)</th>
+                <th class="p-1 bg-blue-400 border border-white font-normal">${px} (90º)</th>
+                <th class="p-1 bg-blue-500 border border-white font-normal bg-[#5C85D6] w-16">Ángulos óptimos (º)</th>
+                <th class="p-1 bg-blue-500 border border-white font-normal bg-[#5C85D6]">${px} óptimo</th>
+                <th class="p-1 bg-blue-600 border border-white font-normal bg-[#102A5B]" colspan="2">Ganancias (%)</th>
             </tr>
             <tr class="bg-blue-500 text-white text-[11px] text-center">
                 <th colspan="7" class="border border-white bg-transparent"></th>
@@ -279,9 +279,9 @@ export const Tables = {
         tbody.previousElementSibling.innerHTML = `
             <tr class="bg-blue-500 text-white text-[11px] text-center border-b border-white">
                 <th class="p-1 border border-white font-normal bg-white" rowspan="2"></th>
-                <th class="p-1 border border-white font-normal">${px} (0º)</th>
-                <th class="p-1 border border-white font-normal">${px}</th>
-                <th class="p-1 border border-white font-normal">Tª media</th>
+                <th class="p-1 bg-blue-400 border border-white font-normal">${px} (0º)</th>
+                <th class="p-1 bg-blue-400 border border-white font-normal">${px}</th>
+                <th class="p-1 bg-blue-400 border border-white font-normal">Tª media</th>
                 <th class="p-1 border border-white font-normal bg-[#102A5B]" colspan="6">Ganancias (%)</th>
             </tr>
             <tr class="bg-blue-500 text-white text-[11px] text-center">
@@ -362,9 +362,9 @@ export const Tables = {
         tbody.previousElementSibling.innerHTML = `
             <tr class="bg-blue-500 text-white text-[11px] text-center border-b border-white">
                 <th class="p-1 border border-white font-normal bg-white" rowspan="2"></th>
-                <th class="p-1 border border-white font-normal">${px} (0º)</th>
-                <th class="p-1 border border-white font-normal">${px}</th>
-                <th class="p-1 border border-white font-normal">Tª media</th>
+                <th class="p-1 bg-blue-400 border border-white font-normal">${px} (0º)</th>
+                <th class="p-1 bg-blue-400 border border-white font-normal">${px}</th>
+                <th class="p-1 bg-blue-400 border border-white font-normal">Tª media</th>
                 <th class="p-1 border border-white font-normal bg-[#102A5B]" colspan="6">Ganancias (%)</th>
             </tr>
             <tr class="bg-blue-500 text-white text-[11px] text-center">
@@ -445,9 +445,9 @@ export const Tables = {
         tbody.previousElementSibling.innerHTML = `
             <tr class="bg-blue-500 text-white text-[11px] text-center border-b border-white">
                 <th class="p-1 border border-white font-normal bg-white" rowspan="2"></th>
-                <th class="p-1 border border-white font-normal">${px} (0º)</th>
-                <th class="p-1 border border-white font-normal">${px}</th>
-                <th class="p-1 border border-white font-normal">Tª media</th>
+                <th class="p-1 bg-blue-400 border border-white font-normal">${px} (0º)</th>
+                <th class="p-1 bg-blue-400 border border-white font-normal">${px}</th>
+                <th class="p-1 bg-blue-400 border border-white font-normal">Tª media</th>
                 <th class="p-1 border border-white font-normal bg-[#102A5B]" colspan="6">Ganancias (%)</th>
             </tr>
             <tr class="bg-blue-500 text-white text-[11px] text-center">
@@ -606,9 +606,9 @@ export const Tables = {
         thead.innerHTML = `
             <tr class="bg-blue-500 text-white text-[11px] text-center border-b border-white">
                 <th class="p-1 border border-white font-normal bg-white" rowspan="2"></th>
-                <th class="p-1 border border-white font-normal">${px} (0º)</th>
-                <th class="p-1 border border-white font-normal">${px}</th>
-                <th class="p-1 border border-white font-normal">Tª media</th>
+                <th class="p-1 bg-blue-400 border border-white font-normal">${px} (0º)</th>
+                <th class="p-1 bg-blue-400 border border-white font-normal">${px}</th>
+                <th class="p-1 bg-blue-400 border border-white font-normal">Tª media</th>
                 <th class="p-1 border border-white font-normal bg-[#102A5B]" colspan="6">Ganancias (%)</th>
             </tr>
             <tr class="bg-blue-500 text-white text-[11px] text-center">

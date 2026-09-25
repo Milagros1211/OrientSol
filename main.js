@@ -1,73 +1,81 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const fs = require('fs');
+const Database = require('better-sqlite3');
 
 let mainWindow;
+let db;
 
-// Obtener la ruta persistente del usuario en el sistema operativo
-const getUserDataPath = () => {
-    const userDataDir = app.getPath('userData');
-    const userCsvPath = path.join(userDataDir, 'BBDD_Mundo.csv');
-    
-    // Si el archivo no existe en el userData del usuario, copiarlo desde los recursos originales
-    if (!fs.existsSync(userCsvPath)) {
-        const defaultCsvPath = path.join(app.getAppPath(), 'input_data', 'BBDD_Mundo.csv');
-        if (fs.existsSync(defaultCsvPath)) {
-            fs.copyFileSync(defaultCsvPath, userCsvPath);
+function initDatabase() {
+    const userDataPath = app.getPath('userData');
+    const persistentDbPath = path.join(userDataPath, 'pvgis_datos.db'); 
+    const templateDbPath = path.join(app.getAppPath(), 'input_data', 'pvgis_datos.db');
+
+    if (!fs.existsSync(persistentDbPath)) {
+        console.log("Copiando base de datos a la ruta del usuario...");
+        if (fs.existsSync(templateDbPath)) {
+            fs.copyFileSync(templateDbPath, persistentDbPath);
         }
     }
-    return userCsvPath;
-};
 
-function createWindow () {
-  const mainWindow = new BrowserWindow({
-    width: 1280,
-    height: 800,
-    minWidth: 1024,
-    minHeight: 768,
-    icon: path.join(__dirname, 'assets/img/ujaen.png'),
-    webPreferences: {
-      nodeIntegration: false,
-      contextIsolation: true,
-      preload: path.join(__dirname, 'preload.js') // Asegúrate de tener tu preload configurado
-    }
-  });
+    db = new Database(persistentDbPath);
+    console.log("Base de datos SQLite conectada con éxito.");
+}
 
-  mainWindow.setMenuBarVisibility(false);
-  mainWindow.loadFile('index.html');
+function createWindow() {
+    mainWindow = new BrowserWindow({
+        width: 1280,
+        height: 800,
+        webPreferences: {
+            nodeIntegration: false,
+            contextIsolation: true,
+            preload: path.join(__dirname, 'preload.js') // <-- Comprueba que esta ruta sea exacta
+        }
+    });
+    mainWindow.loadFile('index.html');
 }
 
 app.whenReady().then(() => {
-  createWindow();
-  app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) createWindow();
-  });
+    initDatabase();
+    createWindow();
 });
 
 app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') app.quit();
+    if (db) db.close();
+    if (process.platform !== 'darwin') app.quit();
 });
 
-// 1. Canal IPC para LEER el CSV persistente del usuario
-ipcMain.handle('get-csv-data', async () => {
+// ==========================================
+// CANALES IPC
+// ==========================================
+
+ipcMain.handle('get-locations', async () => {
     try {
-        const filePath = getUserDataPath();
-        return fs.readFileSync(filePath, 'utf-8');
+        // CORREGIDO: La columna se llama 'mes' según tu esquema SQL
+        const stmt = db.prepare('SELECT * FROM datos_mensuales ORDER BY nombre_emplazamiento ASC, mes ASC'); 
+        return stmt.all();
     } catch (error) {
-        console.error("Error al leer BBDD_Mundo.csv:", error);
-        return "";
+        console.error("Error leyendo SQLite:", error);
+        return [];
     }
 });
 
-// 2. Canal IPC para ESCRIBIR y añadir filas de manera persistente
-ipcMain.handle('append-csv-row', async (event, rowString) => {
+ipcMain.handle('insert-location', async (event, locData) => {
     try {
-        const filePath = getUserDataPath();
-        fs.appendFileSync(filePath, '\n' + rowString, 'utf-8');
-        console.log("BBDD_Mundo.csv actualizado de forma persistente en:", filePath);
+        const stmt = db.prepare(`
+            INSERT INTO datos_mensuales (nombre_emplazamiento, latitud, longitud, radiacion_media, temp_media)
+            VALUES (?, ?, ?, ?, ?)
+        `);
+        stmt.run(
+            locData.name, 
+            locData.lat, 
+            locData.lon, 
+            JSON.stringify(locData.radiacion_media), 
+            JSON.stringify(locData.temp_media)
+        );
         return true;
     } catch (error) {
-        console.error("Error al escribir en BBDD_Mundo.csv:", error);
+        console.error("Error insertando en SQLite:", error);
         return false;
     }
 });

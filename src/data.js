@@ -5,41 +5,48 @@
 import { State } from './state.js'
 import { showAlert } from './ui.js'
 
-// 1. Carga de la Base de Datos Predeterminada (Offline / Contingencia)
 export async function loadDefaultDatabase() {
     try {
-        let csvText = "";
-
-        // Si estamos en Electron, leemos el archivo persistente del usuario
-        if (window.electronAPI && window.electronAPI.getCsvData) {
-            csvText = await window.electronAPI.getCsvData();
-        } else {
-            // Fallback para navegador web en desarrollo
-            const response = await fetch('./input_data/BBDD_Mundo.csv');
-            if (!response.ok) throw new Error("Archivo de base de datos no encontrado.");
-            csvText = await response.text();
-        }
-        
-        const rows = csvText.split('\n');
         const citySelector = document.getElementById('citySelector');
-        citySelector.innerHTML = '<option value="">-- Seleccionar Ciudad --</option>'; // Limpiar duplicados al recargar
-        
-        rows.slice(1).forEach((row) => {
-            if (!row.trim()) return;
-            const cols = row.split(',');
-            
-            const option = document.createElement('option');
-            option.value = JSON.stringify({
-                name: cols[0],
-                lat: parseFloat(cols[1]),
-                lon: parseFloat(cols[2]),
-                radiation: cols.slice(3, 15).map(Number),
-                temperature: cols.slice(15, 27).map(Number)
-            });
-            option.textContent = cols[0];
-            citySelector.appendChild(option);
-        });
+        citySelector.innerHTML = '<option value="">-- Seleccionar Ciudad --</option>';
 
+        if (window.electronAPI && window.electronAPI.getLocations) {
+            // Obtenemos TODAS las filas (ej. 12 filas por ciudad)
+            const rows = await window.electronAPI.getLocations();
+
+            // Objeto diccionario para agrupar las filas por ciudad
+            const citiesMap = {};
+
+            rows.forEach((row) => {
+                const cityName = row.nombre_emplazamiento;
+
+                // Si la ciudad no existe aún en el diccionario, la inicializamos
+                if (!citiesMap[cityName]) {
+                    citiesMap[cityName] = {
+                        name: cityName,
+                        lat: parseFloat(row.latitud),
+                        lon: parseFloat(row.longitud),
+                        radiation: [],
+                        temperature: []
+                    };
+                }
+
+                // Añadimos el dato mensual al array de la ciudad
+                // ¡Asegúrate de que 'radiacion' y 'temperatura' sean los nombres reales de tus columnas en SQLite!
+                citiesMap[cityName].radiation.push(parseFloat(row.radiacion_media) || 0);
+                citiesMap[cityName].temperature.push(parseFloat(row.temp_media) || 20);
+            });
+
+            // Volcamos las ciudades ya agrupadas en el desplegable HTML
+            Object.values(citiesMap).forEach(cityData => {
+                const option = document.createElement('option');
+                option.value = JSON.stringify(cityData);
+                option.textContent = cityData.name;
+                citySelector.appendChild(option);
+            });
+        }
+
+        // Sincronizar selección con el Estado Global
         citySelector.addEventListener('change', (e) => {
             if (!e.target.value) return;
             const data = JSON.parse(e.target.value);
@@ -50,10 +57,12 @@ export async function loadDefaultDatabase() {
             State.climateData.monthlyGlobalRadiation = data.radiation;
             State.climateData.monthlyTemperature = data.temperature;
             State.location.name = data.name;
+            State.location.latitude = data.lat;
+            State.location.longitude = data.lon;
         });
 
     } catch (error) {
-        console.error("Modo Offline Activo: ", error);
+        console.error("Error cargando base de datos SQLite: ", error);
     }
 }
 
