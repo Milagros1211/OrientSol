@@ -27,7 +27,7 @@ export async function initDB() {
         });
 
         // Hacemos fetch del archivo de la BD en tu carpeta input_data
-        const response = await fetch('input_data/pvgis_datos.db');
+        const response = await fetch('./input_data/pvgis_datos.db');
         if (!response.ok) throw new Error("No se pudo descargar la base de datos.");
         
         const buffer = await response.arrayBuffer();
