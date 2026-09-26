@@ -5,22 +5,69 @@
 import { State } from './state.js'
 import { showAlert } from './ui.js'
 
+// --- NUEVA LÓGICA DUAL WEB/ELECTRON ---
+let dbWebInstance = null;
+
+// Detecta si la API de Electron inyectada en preload.js está disponible
+function isElectron() {
+    return window.electronAPI && window.electronAPI.getLocations !== undefined;
+}
+
+// Inicializa la base de datos si estamos en entorno Web (GitHub Pages)
+export async function initDB() {
+    if (isElectron()) {
+        console.log("Entorno Electron: Usando better-sqlite3 nativo.");
+        return;
+    }
+
+    console.log("Entorno Web: Inicializando sql.js (WebAssembly)...");
+    try {
+        const SQL = await initSqlJs({
+            locateFile: file => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/${file}`
+        });
+
+        // Hacemos fetch del archivo de la BD en tu carpeta input_data
+        const response = await fetch('input_data/pvgis_datos.db');
+        if (!response.ok) throw new Error("No se pudo descargar la base de datos.");
+        
+        const buffer = await response.arrayBuffer();
+        dbWebInstance = new SQL.Database(new Uint8Array(buffer));
+        console.log("Base de datos Web inicializada correctamente.");
+    } catch (error) {
+        console.error("Error al inicializar SQLite en la Web:", error);
+    }
+}
+
+// --- FUNCIÓN MODIFICADA ---
 export async function loadDefaultDatabase() {
     try {
         const citySelector = document.getElementById('citySelector');
-        citySelector.innerHTML = '<option value="">-- Seleccionar Ciudad --</option>';
+        citySelector.innerHTML = '<option data-i18n="selectCitytemplate" value="">-- Seleccionar Ciudad --</option>';
 
-        if (window.electronAPI && window.electronAPI.getLocations) {
-            // Obtenemos TODAS las filas (ej. 12 filas por ciudad)
-            const rows = await window.electronAPI.getLocations();
+        let rows = [];
 
-            // Objeto diccionario para agrupar las filas por ciudad
+        // 1. OBTENER FILAS SEGÚN EL ENTORNO
+        if (isElectron()) {
+            // MODO ESCRITORIO
+            rows = await window.electronAPI.getLocations();
+        } else {
+            // MODO WEB
+            if (dbWebInstance) {
+                const stmt = dbWebInstance.prepare('SELECT * FROM datos_mensuales ORDER BY nombre_emplazamiento ASC, mes ASC');
+                while (stmt.step()) {
+                    rows.push(stmt.getAsObject());
+                }
+                stmt.free();
+            }
+        }
+
+        // 2. AGRUPAR FILAS (Tu lógica original intacta)
+        if (rows.length > 0) {
             const citiesMap = {};
 
             rows.forEach((row) => {
                 const cityName = row.nombre_emplazamiento;
 
-                // Si la ciudad no existe aún en el diccionario, la inicializamos
                 if (!citiesMap[cityName]) {
                     citiesMap[cityName] = {
                         name: cityName,
@@ -30,9 +77,6 @@ export async function loadDefaultDatabase() {
                         temperature: []
                     };
                 }
-
-                // Añadimos el dato mensual al array de la ciudad
-                // ¡Asegúrate de que 'radiacion' y 'temperatura' sean los nombres reales de tus columnas en SQLite!
                 citiesMap[cityName].radiation.push(parseFloat(row.radiacion_media) || 0);
                 citiesMap[cityName].temperature.push(parseFloat(row.temp_media) || 20);
             });

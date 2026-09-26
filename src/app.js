@@ -4,7 +4,7 @@
 // ==========================================
 import { State } from './state.js';
 import { syncInputsToState, renderResultsTable, showAlert } from './ui.js';
-import { loadDefaultDatabase, fetchWeatherDataAPI, handleCSVUpload } from './data.js';
+import { initDB, loadDefaultDatabase, fetchWeatherDataAPI, handleCSVUpload } from './data.js';
 import { runSimulation } from './core/simulation.js';
 import { updateCharts } from './charts.js';
 import { exportToCSV, generatePDF } from './export.js';
@@ -14,6 +14,10 @@ import { initLocationModal } from './ui/locationModal.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
     
+
+    // NUEVO: 0. Inicializar Base de Datos según el entorno (Web o Electron)
+    await initDB();
+
     // 1. Cargar base de datos predeterminada y diccionario de idioma
     await loadDefaultDatabase();
     initLocationModal(); // <- Inicializa el modal de nueva localización manual

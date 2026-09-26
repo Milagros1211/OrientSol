@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OrientSol 3.0 - Laboratorio Virtual Fotovoltaico</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/sql-wasm.js"></script>  
     <link rel="stylesheet" href="./assets/css/style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
@@ -29,7 +30,7 @@
             <div class="mb-4 bg-gray-50 p-3 rounded border space-y-2">
                 <label data-i18n="defaultDbLabel" class="block text-sm font-semibold mb-1" id="lblCity">Base de Datos Predeterminada</label>
                 <select id="citySelector" class="w-full border p-2 rounded text-sm bg-white">
-                    <option value="">-- Seleccionar Ciudad --</option>
+                    <option data-i18n="selectCitytemplate" value="">-- Seleccionar Ciudad --</option>
                 </select>
                 <button data-i18n="btnOpenNewLocation" id="btnOpenNewLocation" class="w-full bg-gray-600 hover:bg-gray-700 transition text-white p-2 rounded text-sm font-semibold shadow mt-2">
                     + Nueva Localización (Manual)
@@ -49,7 +50,7 @@
 
             <div class="mb-5 space-y-3">
                 <button data-i18n="btnFetchApi" id="btnFetchAPI" class="w-full bg-green-600 hover:bg-green-700 transition text-white p-2 rounded text-sm font-semibold shadow">
-                    Conectar con API (PVGIS/NASA)
+                    Conectar con API (PVGIS)
                 </button>
                 <div class="text-center">
                     <label data-i18n="lblUploadCsv" class="block text-xs text-gray-500 mb-1" id="lblUpload">O cargar archivo local (.CSV):</label>
