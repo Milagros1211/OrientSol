@@ -10,7 +10,7 @@ import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js
 const SUPABASE_URL = window.env?.SUPABASE_URL || '';
 const SUPABASE_KEY = window.env?.SUPABASE_ANON_KEY || '';
 
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+export const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // --- NUEVA LÓGICA DUAL WEB/ELECTRON ---
 
