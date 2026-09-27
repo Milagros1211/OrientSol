@@ -64,8 +64,8 @@ export async function initLocationModal() {
                         latitud: lat,
                         longitud: lon,
                         // Se convierten a texto por seguridad en caso de que la columna sea tipo Text/JSON
-                        radiacion_media: JSON.stringify(radiation), 
-                        temp_media: JSON.stringify(temperatures)
+                        radiacion_media: radiation,
+                        temp_media: temperatures
                     }]);
 
                 if (error) throw error;
