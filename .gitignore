@@ -1,0 +1,24 @@
+# --- Node.js / Electron ---
+node_modules/
+dist/
+build/
+*.vsix
+
+
+
+# --- Python / Entorno Virtual ---
+venv/
+EXTRAER_DATA/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.vscode/
+
+# --- Datos Locales / Bases de datos ---
+# (Opcional: Descomenta la línea de abajo si prefieres no subir la base de datos 
+# a Git y generarla localmente ejecutando el script de Python en cada equipo)
+# input_data/*.db
+*.xlsx
+*.csv
+*.txt
+*.py

@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OrientSol 3.0 - Laboratorio Virtual Fotovoltaico</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/sql-wasm.js"></script>  
+    <link rel="stylesheet" href="./assets/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-gray-100 text-gray-800 font-sans">
+
+    <header class="bg-blue-900 text-white p-4 flex justify-between items-center shadow-md">
+        <div class="flex items-center gap-3">
+            <img src="./assets/img/ujaen.png" alt="Universidad de Jaén" class="h-8 hidden md:block">
+            <h1 data-i18n="appTitle" class="text-xl font-bold">OrientSol 3.0 - Web & Desktop</h1>
+        </div>
+        <select id="langSelector" class="bg-blue-800 text-white border border-blue-700 p-1 rounded cursor-pointer hover:bg-blue-700">
+            <option value="es">Español</option>
+            <option value="en">English</option>
+        </select>
+    </header>
+
+    <main class="container mx-auto p-4 grid grid-cols-1 lg:grid-cols-3 gap-6 mt-4">
+        
+        <section class="bg-white p-5 rounded-lg shadow-md lg:col-span-1">
+            <h2 data-i18n="panelInputTitle" class="text-lg font-bold mb-4 border-b pb-2 text-blue-900">1. Entrada de Parámetros</h2>
+            
+            <div class="mb-4 bg-gray-50 p-3 rounded border space-y-2">
+                <label data-i18n="defaultDbLabel" class="block text-sm font-semibold mb-1" id="lblCity">Base de Datos Predeterminada</label>
+                <select id="citySelector" class="w-full border p-2 rounded text-sm bg-white">
+                    <option data-i18n="selectCitytemplate" value="">-- Seleccionar Ciudad --</option>
+                </select>
+                <button data-i18n="btnOpenNewLocation" id="btnOpenNewLocation" class="w-full bg-gray-600 hover:bg-gray-700 transition text-white p-2 rounded text-sm font-semibold shadow mt-2">
+                    + Nueva Localización (Manual)
+                </button>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3 mb-4">
+                <div>
+                    <label data-i18n="latitudeLabel" class="block text-sm font-semibold mb-1" id="lblLat">Latitud (°)</label>
+                    <input type="number" id="latInput" class="w-full border p-2 rounded text-sm" placeholder="Ej: 37.76" step="0.01">
+                </div>
+                <div>
+                    <label data-i18n="longitudeLabel" class="block text-sm font-semibold mb-1" id="lblLon">Longitud (°)</label>
+                    <input type="number" id="lonInput" class="w-full border p-2 rounded text-sm" placeholder="Ej: -3.78" step="0.01">
+                </div>
+            </div>
+
+            <div class="mb-5 space-y-3">
+                <button data-i18n="btnFetchApi" id="btnFetchAPI" class="w-full bg-green-600 hover:bg-green-700 transition text-white p-2 rounded text-sm font-semibold shadow">
+                    Conectar con API (PVGIS)
+                </button>
+                <div class="text-center">
+                    <label data-i18n="lblUploadCsv" class="block text-xs text-gray-500 mb-1" id="lblUpload">O cargar archivo local (.CSV):</label>
+                    <input type="file" id="csvUpload" accept=".csv" class="w-full text-xs border p-1 rounded bg-gray-50 cursor-pointer">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3 mb-4 border-t pt-4">
+                <div>
+                    <label data-i18n="albedoLabel" class="block text-sm font-semibold mb-1">Albedo (ρ)</label>
+                    <input type="number" id="albedoInput" value="0.2" min="0.05" max="1" step="0.01" class="w-full border p-2 rounded text-sm">
+                </div>
+                <div>
+                    <label data-i18n="toncLabel" class="block text-sm font-semibold mb-1" title="Temperatura de Operación Nominal de la Célula">TONC (°C)</label>
+                    <input type="number" id="toncInput" value="47" min="40" max="55" class="w-full border p-2 rounded text-sm">
+                </div>
+            </div>
+
+            <div class="mb-6">
+                <label data-i18n="studyTypeLabel" class="block text-sm font-semibold mb-1" id="lblStudy">Tipo de Estudio Solar</label>
+                <select id="studyModeSelector" class="w-full border p-2 rounded text-sm bg-white">
+                    <option value="1">Inclinación fija anual</option>
+                    <option value="2">Inclinación fija estacional</option>
+                    <option value="3">Seguimiento a un eje polar</option>
+                    <option value="4">Seguimiento a un eje azimutal</option>
+                    <option value="5">Seguimiento a un eje horizontal</option>
+                    <option value="6">Seguimiento a dos ejes</option>
+                    <option value="7">Estudio Comparativo Completo</option>
+                </select>
+            </div>
+
+            <button data-i18n="btnCalculate" id="btnCalculate" class="w-full bg-blue-700 hover:bg-blue-800 transition text-white p-3 rounded font-bold text-sm shadow-lg">
+                Ejecutar Simulación Matemática
+            </button>
+        </section>
+
+        <section class="bg-white p-5 rounded-lg shadow-md lg:col-span-2 flex flex-col">
+            <h2 data-i18n="panelOutputTitle" class="text-lg font-bold mb-4 border-b pb-2 text-blue-900">2. Análisis de Resultados Energéticos</h2>
+            
+            <div class="mb-4 flex gap-3 items-center bg-blue-50 p-3 rounded border border-blue-100">
+                <label data-i18n="componentLabel" class="text-sm font-semibold text-blue-900">Mostrar Componente:</label>
+                <select id="componentSelector" class="border p-1 rounded text-sm bg-white shadow-sm flex-1">
+                    <option value="global">Radiación Global (Gd)</option>
+                    <option value="direct">Radiación Directa (Bd)</option>
+                    <option value="diffuse">Radiación Difusa (Dd)</option>
+                    <option value="albedo">Radiación de Albedo (Rd)</option>
+                </select>
+            </div>
+
+            <div class="overflow-x-auto mb-6 flex-1">
+                <!-- En index.html, reemplaza el bloque de la tabla por: -->
+                <div class="flex flex-col xl:flex-row gap-4 items-center justify-between mb-6 flex-1">
+                    <div class="overflow-x-auto w-full flex-1">
+                        <table class="w-full text-xs border-collapse border border-gray-300 shadow-sm">
+                            <thead></thead>
+                            <tbody id="resultsTableBody">
+                                <tr>
+                                    <td data-i18n="emptyTableMsg" colspan="4" class="text-center p-6 text-gray-500 italic bg-gray-50">
+                                        Introduzca los parámetros y ejecute la simulación para visualizar los resultados.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Contenedor para el diagrama ilustrativo (Eje polar) -->
+                    <div id="studyImageContainer" class="hidden flex-shrink-0 flex items-center justify-center p-3 bg-white border rounded shadow-sm self-center">
+                        <!-- Se inyecta dinámicamente desde UI -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="relative w-full h-64 bg-gray-50 border rounded p-2 mb-4">
+                <canvas id="solarChart"></canvas>
+            </div>
+
+            <div class="mt-auto flex gap-3 pt-4 border-t border-gray-200">
+                <button data-i18n="btnOpenEnergy" id="btnOpenEnergy" class="flex-1 bg-gray-200 hover:bg-gray-300 transition text-black border border-gray-400 px-4 py-2 rounded text-sm font-semibold shadow">
+                    Cálculo de energía
+                </button>
+                <button data-i18n="btnExportCsv" id="btnExportCSV" class="flex-1 bg-gray-700 hover:bg-gray-800 transition text-white px-4 py-2 rounded text-sm font-semibold shadow">
+                    Exportar a Excel (.CSV)
+                </button>
+                <button data-i18n="btnExportPdf" id="btnExportPDF" class="flex-1 bg-red-600 hover:bg-red-700 transition text-white px-4 py-2 rounded text-sm font-semibold shadow">
+                    Generar Informe PDF
+                </button>
+            </div>
+        </section>
+    </main>
+    <script src="env.js"></script>
+    <script type="module" src="./src/app.js"></script>
+</body>
+</html>

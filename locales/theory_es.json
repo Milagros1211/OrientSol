@@ -1,0 +1,30 @@
+{
+  "moduleTitle": "Módulo Didáctico: Fundamentos Solares",
+  "sections": [
+    {
+      "id": "teoria_1",
+      "title": "1. La Radiación Solar",
+      "content": "La radiación solar es el conjunto de radiaciones electromagnéticas emitidas por el Sol. Para su cálculo, se considera la constante solar y las variaciones provocadas por la declinación y la latitud del lugar de estudio."
+    },
+    {
+      "id": "teoria_2",
+      "title": "2. Componentes de la Radiación",
+      "content": "La radiación global que alcanza una superficie se divide en tres componentes: Directa (proveniente del disco solar), Difusa (dispersada por la atmósfera) y de Albedo (reflejada por el entorno, condicionada por el coeficiente de reflexión)."
+    },
+    {
+      "id": "teoria_5",
+      "title": "3. Estimación de la Radiación",
+      "content": "La aplicación utiliza modelos empíricos y analíticos, como el método de Osterwald, para estimar la irradiación sobre superficies inclinadas basándose en los datos captados sobre el plano horizontal."
+    },
+    {
+      "id": "teoria_6",
+      "title": "4. Esquema de Cálculo Computacional",
+      "content": "El motor cinemático resuelve en primer lugar los ángulos horarios y el azimut, para posteriormente aplicar las matrices de transposición geométrica según el tipo de seguidor (fijo, polar, horizontal, azimutal o dos ejes)."
+    },
+    {
+      "id": "teoria_7",
+      "title": "5. Búsqueda de Situaciones Óptimas",
+      "content": "Mediante procesos iterativos de 1º en 1º, el algoritmo evalúa la captación máxima en ángulos comprendidos entre 0º y 90º, definiendo así el ángulo óptimo estacional y anual para los paneles fotovoltaicos."
+    }
+  ]
+}

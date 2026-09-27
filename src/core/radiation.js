@@ -1,0 +1,53 @@
+/**
+ * ==========================================
+ * Archivo: src/core/radiation.js
+ * Propósito: Modelado de componentes de radiación y transposición (Sustituye Dh0.m, DhBeta.m, RhBeta.m, Gh0.m)
+ * ==========================================
+ */
+
+export const Radiation = {
+    /**
+     * Calcula el factor de conversión r_d (fracción horaria difusa) de Collares-Pereira y Rabl.
+     */
+    calculateDiffuseHourlyFraction(hourAnglesMatrix, sunsetAngles) {
+        return hourAnglesMatrix.map((dailyAngles, monthIdx) => {
+            const ws = sunsetAngles[monthIdx];
+            const denominator = Math.sin(ws) - (ws * Math.cos(ws));
+            
+            return dailyAngles.map(w => {
+                const numerator = Math.cos(w) - Math.cos(ws);
+                return (Math.PI / 24) * (numerator / denominator);
+            });
+        });
+    },
+
+    /**
+     * Transpone la radiación difusa horaria desde el plano horizontal al plano inclinado (Isotrópico de Liu y Jordan).
+     */
+    calculateDiffuseTilted(diffuseHourlyHorizontalMatrix, betaRad) {
+        const tiltFactor = (1 + Math.cos(betaRad)) / 2;
+        return diffuseHourlyHorizontalMatrix.map(monthlyData => 
+            monthlyData.map(dh0 => dh0 * tiltFactor)
+        );
+    },
+
+    /**
+     * Calcula la radiación de albedo (reflejada) en un plano inclinado β.
+     */
+    calculateAlbedoTilted(globalHourlyHorizontalMatrix, betaRad, albedo) {
+        const reflectionFactor = albedo * (1 - Math.cos(betaRad)) / 2;
+        return globalHourlyHorizontalMatrix.map(monthlyData => 
+            monthlyData.map(gh0 => gh0 * reflectionFactor)
+        );
+    },
+
+    /**
+     * Agrega las componentes horarias para obtener la radiación mensual en un plano inclinado.
+     */
+    aggregateHourlyToDaily(tiltedHourlyMatrix) {
+        return tiltedHourlyMatrix.map(monthlyData => {
+            const sum = monthlyData.reduce((acc, val) => acc + val, 0);
+            return sum * 2; 
+        });
+    }
+};

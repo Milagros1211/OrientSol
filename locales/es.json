@@ -1,0 +1,40 @@
+{
+  "appTitle": "OrientSol 3.0 - Web & Desktop",
+  "panelInputTitle": "1. Entrada de Parámetros",
+  "defaultDbLabel": "Base de Datos Predeterminada",
+  "latitudeLabel": "Latitud (°)",
+  "longitudeLabel": "Longitud (°)",
+  "btnFetchApi": "Conectar con API (PVGIS/NASA)",
+  "selectCitytemplate": "Selecciona una ciudad o introduce data manualmente",
+  "lblUploadCsv": "O cargar archivo local (.CSV):",
+  "albedoLabel": "Albedo (ρ)",
+  "toncLabel": "TONC (°C)",
+  "studyTypeLabel": "Tipo de Estudio Solar",
+  "btnCalculate": "Ejecutar Simulación Matemática",
+  "panelOutputTitle": "2. Análisis de Resultados Energéticos",
+  "componentLabel": "Mostrar Componente:",
+  "tableMonth": "Mes",
+  "tableHorizontal": "Plano Horizontal (0°)",
+  "tableStudy": "Estudio Seleccionado",
+  "tableGain": "Ganancia (%)",
+  "emptyTableMsg": "Introduzca los parámetros y ejecute la simulación para visualizar los resultados.",
+  "btnOpenEnergy": "Cálculo de energía",
+  "btnExportCsv": "Exportar a Excel (.CSV)",
+  "btnExportPdf": "Generar Informe PDF",
+  "btnOpenNewLocation": "Nueva Localización (Manual)",
+  "studies": {
+    "1": "Inclinación fija anual",
+    "2": "Inclinación fija estacional",
+    "3": "Seguimiento a un eje polar",
+    "4": "Seguimiento a un eje azimutal",
+    "5": "Seguimiento a un eje horizontal",
+    "6": "Seguimiento a dos ejes",
+    "7": "Estudio Comparativo Completo"
+  },
+  "components": {
+    "global": "Radiación Global (Gd)",
+    "direct": "Radiación Directa (Bd)",
+    "diffuse": "Radiación Difusa (Dd)",
+    "albedo": "Radiación de Albedo (Rd)"
+  }
+}

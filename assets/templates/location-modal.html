@@ -1,0 +1,43 @@
+<div id="locationModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white rounded-lg shadow-xl w-11/12 max-w-2xl p-6 flex flex-col gap-4">
+        <h3 class="text-lg font-bold text-blue-900 border-b pb-2">OrientSol 3.0 - Introducir los datos manualmente</h3>
+        
+        <div class="grid grid-cols-3 gap-3">
+            <div>
+                <label class="block text-xs font-semibold mb-1">Ciudad:</label>
+                <input type="text" id="manualCityName" class="w-full border p-2 rounded text-sm" placeholder="Ej: Andújar">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold mb-1">Latitud (°):</label>
+                <input type="number" id="manualLat" step="0.01" class="w-full border p-2 rounded text-sm" placeholder="Ej: 38.04">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold mb-1">Longitud (°):</label>
+                <input type="number" id="manualLon" step="0.01" class="w-full border p-2 rounded text-sm" placeholder="Ej: -4.05">
+            </div>
+        </div>
+
+        <div>
+            <label class="block text-xs font-bold text-gray-700 mb-2">Radiación global media mensual sobre plano horizontal (kWh/m²/día):</label>
+            <div class="grid grid-cols-4 gap-2 text-xs">
+                <div><span>Enero</span><input type="number" step="0.01" class="manual-rad w-full border p-1 rounded" value="2.42"></div>
+                <div><span>Febrero</span><input type="number" step="0.01" class="manual-rad w-full border p-1 rounded" value="3.10"></div>
+                <div><span>Marzo</span><input type="number" step="0.01" class="manual-rad w-full border p-1 rounded" value="4.60"></div>
+                <div><span>Abril</span><input type="number" step="0.01" class="manual-rad w-full border p-1 rounded" value="5.22"></div>
+                <div><span>Mayo</span><input type="number" step="0.01" class="manual-rad w-full border p-1 rounded" value="6.56"></div>
+                <div><span>Junio</span><input type="number" step="0.01" class="manual-rad w-full border p-1 rounded" value="7.11"></div>
+                <div><span>Julio</span><input type="number" step="0.01" class="manual-rad w-full border p-1 rounded" value="6.98"></div>
+                <div><span>Agosto</span><input type="number" step="0.01" class="manual-rad w-full border p-1 rounded" value="6.13"></div>
+                <div><span>Septiembre</span><input type="number" step="0.01" class="manual-rad w-full border p-1 rounded" value="4.89"></div>
+                <div><span>Octubre</span><input type="number" step="0.01" class="manual-rad w-full border p-1 rounded" value="3.70"></div>
+                <div><span>Noviembre</span><input type="number" step="0.01" class="manual-rad w-full border p-1 rounded" value="2.44"></div>
+                <div><span>Diciembre</span><input type="number" step="0.01" class="manual-rad w-full border p-1 rounded" value="2.04"></div>
+            </div>
+        </div>
+
+        <div class="flex justify-end gap-3 mt-4 border-t pt-3">
+            <button id="btnCancelLocation" class="bg-gray-300 hover:bg-gray-400 text-black px-4 py-2 rounded text-sm font-semibold">Volver</button>
+            <button id="btnSaveLocation" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded text-sm font-bold shadow">Ok</button>
+        </div>
+    </div>
+</div>

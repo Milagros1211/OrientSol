@@ -1,0 +1,40 @@
+{
+  "appTitle": "OrientSol 3.0 - Web & Desktop",
+  "panelInputTitle": "1. Parameter Input",
+  "defaultDbLabel": "Default Database",
+  "latitudeLabel": "Latitude (°)",
+  "longitudeLabel": "Longitude (°)",
+  "btnFetchApi": "Connect to API (PVGIS/NASA)",
+  "selectCitytemplate": "Choose a city or enter new data",
+  "lblUploadCsv": "Or upload local file (.CSV):",
+  "albedoLabel": "Albedo (ρ)",
+  "toncLabel": "NOCT (°C)",
+  "studyTypeLabel": "Solar Study Type",
+  "btnCalculate": "Run Mathematical Simulation",
+  "panelOutputTitle": "2. Energy Results Analysis",
+  "componentLabel": "Show Component:",
+  "tableMonth": "Month",
+  "tableHorizontal": "Horizontal Plane (0°)",
+  "tableStudy": "Selected Study",
+  "tableGain": "Gain (%)",
+  "emptyTableMsg": "Enter parameters and run the simulation to view results.",
+  "btnOpenEnergy": "Energy Analysis",
+  "btnExportCsv": "Export to Excel (.CSV)",
+  "btnExportPdf": "Generate PDF Report",
+  "btnOpenNewLocation": "New Location (Offline)",
+  "studies": {
+    "1": "Fixed annual inclination",
+    "2": "Fixed seasonal inclination",
+    "3": "Single-axis polar tracking",
+    "4": "Single-axis azimuthal tracking",
+    "5": "Single-axis horizontal tracking",
+    "6": "Dual-axis tracking",
+    "7": "Complete Comparative Study"
+  },
+  "components": {
+    "global": "Global Radiation (Gd)",
+    "direct": "Direct Radiation (Bd)",
+    "diffuse": "Diffuse Radiation (Dd)",
+    "albedo": "Albedo Radiation (Rd)"
+  }
+}
