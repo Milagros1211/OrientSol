@@ -57,18 +57,29 @@ export async function initLocationModal() {
                 return showAlert("Error: No hay conexión a la base de datos en la nube.", true);
             }
             try {
-                const { error } = await supabase
-                    .from('datos_mensuales')
-                    .insert([{
+                // 1. Preparamos un arreglo para guardar las 12 filas separadas
+                const filasParaInsertar = [];
+                
+                // 2. Iteramos 12 veces (una por cada mes)
+                for (let i = 0; i < 12; i++) {
+                    filasParaInsertar.push({
                         nombre_emplazamiento: cityName,
+                        mes: i + 1,                     // El mes actual (de 1 a 12)
                         latitud: lat,
                         longitud: lon,
-                        // Se convierten a texto por seguridad en caso de que la columna sea tipo Text/JSON
-                        radiacion_media: radiation,
-                        temp_media: temperatures
-                    }]);
+                        radiacion_media: radiation[i],  // Solo extraemos el número de este mes
+                        temp_media: temperatures[i]     // Solo extraemos la temperatura de este mes
+                    });
+                }
+
+                // 3. Enviamos las 12 filas a Supabase en una sola consulta
+                const { error } = await supabase
+                    .from('datos_mensuales')
+                    .insert(filasParaInsertar);
 
                 if (error) throw error;
+                
+                // Si llegamos aquí, se guardaron los 12 meses exitosamente
             } catch (err) {
                 console.error("Fallo al subir a Supabase:", err);
                 return showAlert("Hubo un error al guardar en la base de datos online.", true);
