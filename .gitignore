@@ -19,5 +19,6 @@ __pycache__/
 # a Git y generarla localmente ejecutando el script de Python en cada equipo)
 # input_data/*.db
 *.xlsx
+*.csv
 *.txt
 *.py

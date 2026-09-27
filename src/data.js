@@ -1,41 +1,32 @@
 // ==========================================
 // Archivo: src/data.js
-// Propósito: Gestión asíncrona de datos (API PVGIS y parser CSV local)
+// Propósito: Gestión asíncrona de datos (Supabase y SQLite local)
 // ==========================================
-import { State } from './state.js'
-import { showAlert } from './ui.js'
+import { State } from './state.js';
+import { showAlert } from './ui.js';
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+
+// Leer las credenciales de forma segura desde el entorno del navegador o proceso
+const SUPABASE_URL = window.env?.SUPABASE_URL || '';
+const SUPABASE_KEY = window.env?.SUPABASE_ANON_KEY || '';
+
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // --- NUEVA LÓGICA DUAL WEB/ELECTRON ---
-let dbWebInstance = null;
 
 // Detecta si la API de Electron inyectada en preload.js está disponible
 function isElectron() {
     return window.electronAPI && window.electronAPI.getLocations !== undefined;
 }
 
-// Inicializa la base de datos si estamos en entorno Web (GitHub Pages)
+// Inicializa la base de datos
 export async function initDB() {
     if (isElectron()) {
         console.log("Entorno Electron: Usando better-sqlite3 nativo.");
         return;
     }
 
-    console.log("Entorno Web: Inicializando sql.js (WebAssembly)...");
-    try {
-        const SQL = await initSqlJs({
-            locateFile: file => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/${file}`
-        });
-
-        // Hacemos fetch del archivo de la BD en tu carpeta input_data
-        const response = await fetch('./input_data/pvgis_datos.db');
-        if (!response.ok) throw new Error("No se pudo descargar la base de datos.");
-        
-        const buffer = await response.arrayBuffer();
-        dbWebInstance = new SQL.Database(new Uint8Array(buffer));
-        console.log("Base de datos Web inicializada correctamente.");
-    } catch (error) {
-        console.error("Error al inicializar SQLite en la Web:", error);
-    }
+    console.log("Entorno Web: Cliente de Supabase inicializado correctamente.");
 }
 
 // --- FUNCIÓN MODIFICADA ---
@@ -51,14 +42,19 @@ export async function loadDefaultDatabase() {
             // MODO ESCRITORIO
             rows = await window.electronAPI.getLocations();
         } else {
-            // MODO WEB
-            if (dbWebInstance) {
-                const stmt = dbWebInstance.prepare('SELECT * FROM datos_mensuales ORDER BY nombre_emplazamiento ASC, mes ASC');
-                while (stmt.step()) {
-                    rows.push(stmt.getAsObject());
-                }
-                stmt.free();
+            // MODO WEB (GITHUB PAGES): Consulta a Supabase
+            const { data, error } = await supabase
+                .from('datos_mensuales')
+                .select('*')
+                .order('nombre_emplazamiento', { ascending: true })
+                .order('mes', { ascending: true });
+
+            if (error) {
+                console.error("Error al obtener datos de Supabase:", error);
+                throw error;
             }
+            
+            rows = data; // Supabase devuelve el array de objetos directamente
         }
 
         // 2. AGRUPAR FILAS (Tu lógica original intacta)
@@ -106,7 +102,7 @@ export async function loadDefaultDatabase() {
         });
 
     } catch (error) {
-        console.error("Error cargando base de datos SQLite: ", error);
+        console.error("Error cargando base de datos: ", error);
     }
 }
 

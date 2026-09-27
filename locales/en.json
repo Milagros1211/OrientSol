@@ -5,7 +5,7 @@
   "latitudeLabel": "Latitude (°)",
   "longitudeLabel": "Longitude (°)",
   "btnFetchApi": "Connect to API (PVGIS/NASA)",
-  "selectCitytemplate": "Select a city from the list or enter new data",
+  "selectCitytemplate": "Choose a city or enter new data",
   "lblUploadCsv": "Or upload local file (.CSV):",
   "albedoLabel": "Albedo (ρ)",
   "toncLabel": "NOCT (°C)",

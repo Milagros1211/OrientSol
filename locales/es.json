@@ -5,7 +5,7 @@
   "latitudeLabel": "Latitud (°)",
   "longitudeLabel": "Longitud (°)",
   "btnFetchApi": "Conectar con API (PVGIS/NASA)",
-  "selectCitytemplate": "Selecciona una ciudad de la lista o introduce data manualmente",
+  "selectCitytemplate": "Selecciona una ciudad o introduce data manualmente",
   "lblUploadCsv": "O cargar archivo local (.CSV):",
   "albedoLabel": "Albedo (ρ)",
   "toncLabel": "TONC (°C)",

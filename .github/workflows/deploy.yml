@@ -1,0 +1,32 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [ main ] # Cambia "main" por "master" si tu rama principal se llama así
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v3
+
+      # --- AQUÍ SE GENERAN TUS CREDENCIALES DE SUPABASE DE FORMA SEGURA ---
+      - name: Generar archivo env.js desde GitHub Secrets
+        run: |
+          echo "window.env = {" > env.js
+          echo "  SUPABASE_URL: '${{ secrets.SUPABASE_URL }}'," >> env.js
+          echo "  SUPABASE_ANON_KEY: '${{ secrets.SUPABASE_ANON_KEY }}'" >> env.js
+          echo "};" >> env.js
+      # -------------------------------------------------------------------
+
+      - name: Configurar Node.js (si lo necesitas)
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Desplegar en GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: . # O la carpeta de compilación si usas Vite/Webpack (ej: ./dist)
