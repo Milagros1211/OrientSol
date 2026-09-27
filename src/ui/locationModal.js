@@ -1,6 +1,7 @@
 // src/ui/locationModal.js
 import { State } from '../state.js';
 import { showAlert } from '../ui.js';
+import { supabase } from '../data.js';
 
 export async function initLocationModal() {
     if (!document.getElementById('locationModal')) {
@@ -45,12 +46,33 @@ export async function initLocationModal() {
 
         // 1. Modificar físicamente el archivo BBDD_Mundo.csv en disco a través de Electron
         if (window.electronAPI && window.electronAPI.appendCsvRow) {
+            // MODO ESCRITORIO (Offline)
             const success = await window.electronAPI.appendCsvRow(csvRow);
             if (!success) {
                 return showAlert("No se pudo guardar en el archivo local de la base de datos.", true);
             }
         } else {
-            console.warn("Entorno web puro detectado: La modificación física del archivo CSV requiere ejecución en modo escritorio (Electron).");
+            // MODO WEB (Supabase)
+            if (!supabase) {
+                return showAlert("Error: No hay conexión a la base de datos en la nube.", true);
+            }
+            try {
+                const { error } = await supabase
+                    .from('datos_mensuales')
+                    .insert([{
+                        nombre_emplazamiento: cityName,
+                        latitud: lat,
+                        longitud: lon,
+                        // Se convierten a texto por seguridad en caso de que la columna sea tipo Text/JSON
+                        radiacion_media: JSON.stringify(radiation), 
+                        temp_media: JSON.stringify(temperatures)
+                    }]);
+
+                if (error) throw error;
+            } catch (err) {
+                console.error("Fallo al subir a Supabase:", err);
+                return showAlert("Hubo un error al guardar en la base de datos online.", true);
+            }
         }
 
         // 2. Actualizar el Estado global de la aplicación (Memoria RAM)
