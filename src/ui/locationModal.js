@@ -72,12 +72,15 @@ export async function initLocationModal() {
                     });
                 }
 
-                // 3. Enviamos las 12 filas a Supabase en una sola consulta
+                // 3. Usamos .upsert() especificando el conflicto por emplazamiento y mes
                 const { error } = await supabase
                     .from('datos_mensuales')
-                    .insert(filasParaInsertar);
+                    .upsert(filasParaInsertar, { onConflict: 'nombre_emplazamiento,mes' });
 
                 if (error) throw error;
+                
+                alert("¡Localización guardada en la nube exitosamente!");
+                await loadDefaultDatabase();
                 
                 // Si llegamos aquí, se guardaron los 12 meses exitosamente
             } catch (err) {
